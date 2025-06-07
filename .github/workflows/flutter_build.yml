@@ -32,22 +32,22 @@ jobs:
           zip -r maze-dev.zip maze.app  # 打包为 zip 便于分发
 
       # 代码签名（需提前配置 GitHub Secrets）
-      - name: Code signing
-        if: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE }}
-        run: |
-          # 导入开发者证书
-          echo "${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE }}" > developer_id.p12
-          security create-keychain -p "${{ secrets.MACOS_KEYCHAIN_PASSWORD }}" build.keychain
-          security import developer_id.p12 -k build.keychain -P "${{ secrets.MACOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "${{ secrets.MACOS_KEYCHAIN_PASSWORD }}" build.keychain
+      # - name: Code signing
+      #   if: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE }}
+      #   run: |
+      #     # 导入开发者证书
+      #     echo "${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE }}" > developer_id.p12
+      #     security create-keychain -p "${{ secrets.MACOS_KEYCHAIN_PASSWORD }}" build.keychain
+      #     security import developer_id.p12 -k build.keychain -P "${{ secrets.MACOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+      #     security default-keychain -s build.keychain
+      #     security unlock-keychain -p "${{ secrets.MACOS_KEYCHAIN_PASSWORD }}" build.keychain
           
-          # 签名应用
-          codesign --deep --force --verbose --sign "Developer ID Application: Your Name (TeamID)" build/macos/Build/Products/Release/maze.app
+      #     # 签名应用
+      #     codesign --deep --force --verbose --sign "Developer ID Application: Your Name (TeamID)" build/macos/Build/Products/Release/maze.app
           
-          # 验证签名
-          codesign -dv --verbose=4 build/macos/Build/Products/Release/maze.app
-          spctl -a -t exec -vv build/macos/Build/Products/Release/maze.app
+      #     # 验证签名
+      #     codesign -dv --verbose=4 build/macos/Build/Products/Release/maze.app
+      #     spctl -a -t exec -vv build/macos/Build/Products/Release/maze.app
 
       # 打包为 DMG 或 PKG（可选）
       - name: Create DMG
@@ -57,10 +57,10 @@ jobs:
           dmg-name: maze-dev.dmg
 
       # 上传产物
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: macos-app
-          path: |
-            build/macos/Build/Products/Release/maze.app
-            maze-dev.dmg  # 如果生成了 DMG
+      # - name: Upload Artifact
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: macos-app
+      #     path: |
+      #       build/macos/Build/Products/Release/maze.app
+      #       maze-dev.dmg  # 如果生成了 DMG
