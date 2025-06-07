@@ -18,32 +18,44 @@ class SoundManager {
     if (!_soundEnabled) return;
     
     try {
-      // Using a simple beep sound for movement
-      // In a real app, you would add actual sound files to assets
+      // Don't stop previous sounds for move - they should be short
       await _audioPlayer.play(AssetSource('sounds/move.flac'));
     } catch (e) {
-      // Silently handle missing sound files for better user experience
-      // print('Sound file not found: $e');
+      print('Error playing move sound: $e');
     }
   }
 
   Future<void> playWinSound() async {
-    if (!_soundEnabled) return;
+    if (!_soundEnabled) {
+      print('Sound disabled, not playing win sound');
+      return;
+    }
     
     try {
+      print('Attempting to play win sound...');
+      // Stop any currently playing sound first
+      await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('sounds/win.flac'));
+      print('Win sound playback started successfully');
     } catch (e) {
-      // print('Sound file not found: $e');
+      print('Error playing win sound: $e');
     }
   }
 
   Future<void> playCompleteSound() async {
-    if (!_soundEnabled) return;
+    if (!_soundEnabled) {
+      print('Sound disabled, not playing complete sound');
+      return;
+    }
     
     try {
+      print('Attempting to play complete sound...');
+      // Stop any currently playing sound first
+      await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('sounds/complete.wav'));
+      print('Complete sound playback started successfully');
     } catch (e) {
-      // print('Sound file not found: $e');
+      print('Error playing complete sound: $e');
     }
   }
 

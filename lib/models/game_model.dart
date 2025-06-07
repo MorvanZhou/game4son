@@ -91,17 +91,23 @@ class GameModel extends ChangeNotifier {
   void _checkWinCondition() {
     // Win condition: reach bottom-right corner
     if (player.x == mazeWidth - 1 && player.y == mazeHeight - 1) {
+      print('Player reached win position! Level: $currentLevel, Total: $totalLevels');
       if (currentLevel >= totalLevels) {
+        print('Game completed!');
         gameState = GameState.gameComplete;
       } else {
+        print('Level $currentLevel completed!');
         gameState = GameState.levelComplete;
       }
+      print('New game state: $gameState');
     }
   }
 
   void nextLevel() {
+    print('nextLevel() called. Current level: $currentLevel');
     if (currentLevel < totalLevels) {
       currentLevel++;
+      print('Moving to level $currentLevel');
       _initializeLevel();
     }
   }

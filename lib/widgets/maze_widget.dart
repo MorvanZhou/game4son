@@ -67,11 +67,8 @@ class _MazeWidgetState extends State<MazeWidget> with TickerProviderStateMixin {
   }
 
   void _onGameStateChanged() {
-    if (widget.gameModel.gameState == GameState.levelComplete) {
-      widget.onLevelComplete();
-    } else if (widget.gameModel.gameState == GameState.gameComplete) {
-      widget.onGameComplete();
-    }
+    // This listener is now only used for any additional widget-specific state handling
+    // Dialog display is handled in GameScreen to avoid duplication
   }
 
   KeyEventResult _handleKeyPress(FocusNode node, KeyEvent event) {

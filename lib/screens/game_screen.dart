@@ -47,11 +47,24 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   }
 
   void _onGameModelChanged() {
+    // Debug: Print the current game state
+    print('GameModel state changed to: ${gameModel.gameState}');
+    
     // Play sound effects based on game state changes
     if (gameModel.gameState == GameState.levelComplete) {
+      print('Playing win sound for level ${gameModel.currentLevel}');
       soundManager.playWinSound();
+      // Also show the congratulations dialog
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showCongratulationsDialog();
+      });
     } else if (gameModel.gameState == GameState.gameComplete) {
+      print('Playing complete sound - game finished!');
       soundManager.playCompleteSound();
+      // Also show the congratulations dialog
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showCongratulationsDialog();
+      });
     }
   }
 
@@ -363,8 +376,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 builder: (context, child) {
                   return MazeWidget(
                     gameModel: gameModel,
-                    onLevelComplete: _showCongratulationsDialog,
-                    onGameComplete: _showCongratulationsDialog,
+                    onLevelComplete: () {}, // Empty callback - handled in _onGameModelChanged
+                    onGameComplete: () {}, // Empty callback - handled in _onGameModelChanged
                   );
                 },
               ),
