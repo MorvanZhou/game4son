@@ -70,6 +70,8 @@ jobs:
       - run: |
           sudo apt-get update -y  # 更新系统包信息
           sudo apt-get install -y ninja-build libgtk-3-dev  # 安装依赖（用于 Linux 构建）
+          sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+
       - run: flutter pub get
       - run: flutter build linux --release
       - run: tar -czvf linux-x64.tar.gz -C build/linux/x64/release/bundle .  # 压缩为 tar 包
