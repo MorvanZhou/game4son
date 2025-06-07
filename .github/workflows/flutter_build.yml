@@ -114,10 +114,10 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build windows --release
-      - run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath maze-x64.zip  # 压缩为 zip 文件
+      - run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath windows-x64.zip  # 压缩为 zip 文件
       - uses: softprops/action-gh-release@v2
         with:
-          files: maze-x64.zip
+          files: windows-x64.zip
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
