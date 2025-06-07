@@ -50,11 +50,18 @@ jobs:
       #     spctl -a -t exec -vv build/macos/Build/Products/Release/maze.app
 
       # 打包为 DMG 或 PKG（可选）
+      - name: Install create-dmg
+        run: brew install create-dmg
       - name: Create DMG
-        uses: sersoft-gmbh/create-dmg-action@v1
-        with:
-          source-folder: build/macos/Build/Products/Release/maze.app
-          dmg-name: maze-dev.dmg
+        run: |
+          create-dmg --volname "maze" \
+            --window-pos 200 120 \
+            --icon-size 100 \
+            --icon "MyApp.app" 200 190 \
+            --hide-extension MyApp.app \
+            --app-drop-link 600 185 \
+            maze.dmg \
+            build/macos/Build/Products/Release/maze.app
 
       # 上传产物
       # - name: Upload Artifact
