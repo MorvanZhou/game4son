@@ -24,6 +24,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     soundManager = SoundManager();
     gameModel.addListener(_onGameModelChanged);
     
+    // Start background music
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      soundManager.startBackgroundMusic();
+    });
+    
     // Header animation for subtle pulsing effects (reduced intensity)
     _headerAnimationController = AnimationController(
       duration: const Duration(seconds: 6), // Much slower animation
@@ -43,6 +48,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void dispose() {
     gameModel.removeListener(_onGameModelChanged);
     _headerAnimationController.dispose();
+    soundManager.stopBackgroundMusic(); // Stop background music when disposing
     super.dispose();
   }
 
@@ -116,6 +122,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             onPressed: () {
               Navigator.of(context).pop();
               gameModel.resumeGame();
+              soundManager.resumeBackgroundMusic(); // Resume background music
             },
           ),
           _buildCyberButton(
@@ -244,10 +251,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         ),
         actions: [
           _buildNeonButton(
-            icon: soundManager.soundEnabled ? Icons.volume_up : Icons.volume_off,
+            icon: soundManager.musicEnabled ? Icons.music_note : Icons.music_off,
             onPressed: () {
               setState(() {
-                soundManager.toggleSound();
+                soundManager.toggleMusic();
               });
             },
           ),
@@ -255,6 +262,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             icon: Icons.pause,
             onPressed: () {
               gameModel.pauseGame();
+              soundManager.pauseBackgroundMusic(); // Pause background music
               _showPauseDialog();
             },
           ),

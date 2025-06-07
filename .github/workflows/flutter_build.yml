@@ -7,7 +7,7 @@ on:
       - '*'  # 匹配所有 tag，例如 v1.0.0
 
 jobs:
-  build:
+  macos:
     runs-on: macos-latest  # 必须使用 macOS 环境
     steps:
       - uses: actions/checkout@v4  # 拉取代码
@@ -37,6 +37,103 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           files: macos.tar.gz
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
+          prerelease: false
+
+  web: # 构建 Web 版本
+    runs-on: ubuntu-latest  # 使用最新的 Ubuntu 系统执行
+    steps:
+      - uses: actions/checkout@v4  # 拉取代码仓库
+        with:
+          fetch-depth: 0  # 获取完整的提交历史（用于生成变更日志等）
+      - uses: subosito/flutter-action@v2  # 安装 Flutter 环境
+      - run: flutter pub get  # 下载项目依赖
+      - run: flutter build web --release  # 构建 Web 版本的发布包
+      - run: tar -czvf web.tar.gz -C build/web .  # 压缩打包为 web.tar.gz
+      - uses: softprops/action-gh-release@v2  # 发布 GitHub Release
+        with:
+          files: web.tar.gz  # 上传文件
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}  # 使用 tag 或提交哈希命名
+          name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}  # 如果不是 tag，作为草稿
+          prerelease: false  # 不标记为预发布版本
+
+  linux: # 构建 Linux 桌面应用
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+      - run: |
+          sudo apt-get update -y  # 更新系统包信息
+          sudo apt-get install -y ninja-build libgtk-3-dev  # 安装依赖（用于 Linux 构建）
+      - run: flutter pub get
+      - run: flutter build linux --release
+      - run: tar -czvf linux-x64.tar.gz -C build/linux/x64/release/bundle .  # 压缩为 tar 包
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: linux-x64.tar.gz
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
+          prerelease: false  
+
+  android: # 构建 Android 应用
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4  # 设置 Java 环境（Android 编译需要）
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+      - run: flutter pub get
+      - run: flutter build apk --target-platform android-arm64  # 构建 64 位 Android 安装包
+      - run: cp build/app/outputs/flutter-apk/app-release.apk maze.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: maze.apk  # 上传 APK 文件
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
+          prerelease: false
+
+  windows: # 构建 Windows 桌面应用
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath maze-x64.zip  # 压缩为 zip 文件
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: maze-x64.zip
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+          draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
+          prerelease: false
+
+  ios: # 构建 iOS 应用（需要 macOS 系统）
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign  # 构建 iOS 应用，但不签名（用于测试）
+      - run: tar -czvf ios.tar.gz -C build/ios/iphoneos maze.app  # 压缩打包
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ios.tar.gz
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
