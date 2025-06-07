@@ -1,0 +1,29 @@
+name: Build Flutter macOS App
+
+on:
+  push:
+    branches: [main]  # 触发分支
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  build:
+    runs-on: macos-latest  # 必须使用 macOS 环境
+    steps:
+      - uses: actions/checkout@v4  # 拉取代码
+      
+      - uses: jddeep/Flutter-Runner@1.2.0  # 安装 Flutter
+        with:
+          flutter-version: 'stable'  # 指定 Flutter 版本
+          channel: 'stable'
+
+      - run: flutter pub get  # 获取依赖
+      
+      - run: flutter build macos --release  # 构建 macOS 应用
+      
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: macOS-App
+          path: build/macos/Build/Products/Release/  # 构建产物路径
