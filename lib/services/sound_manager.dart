@@ -27,16 +27,13 @@ class SoundManager {
 
   Future<void> playWinSound() async {
     if (!_soundEnabled) {
-      print('Sound disabled, not playing win sound');
       return;
     }
     
     try {
-      print('Attempting to play win sound...');
       // Stop any currently playing sound first
       await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('sounds/win.flac'));
-      print('Win sound playback started successfully');
     } catch (e) {
       print('Error playing win sound: $e');
     }
@@ -44,16 +41,13 @@ class SoundManager {
 
   Future<void> playCompleteSound() async {
     if (!_soundEnabled) {
-      print('Sound disabled, not playing complete sound');
       return;
     }
     
     try {
-      print('Attempting to play complete sound...');
       // Stop any currently playing sound first
       await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('sounds/complete.wav'));
-      print('Complete sound playback started successfully');
     } catch (e) {
       print('Error playing complete sound: $e');
     }
