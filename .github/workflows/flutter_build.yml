@@ -1,11 +1,9 @@
 name: Build Flutter macOS App
 
 on:
-  push:
-    branches: [main]  # 触发分支
-  pull_request:
-    branches: [main]
-  workflow_dispatch:  # 支持手动触发
+  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build:
