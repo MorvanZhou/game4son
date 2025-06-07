@@ -23,7 +23,7 @@ jobs:
       - run: flutter build macos --release  # 构建 macOS 应用
       
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macOS-App
           path: build/macos/Build/Products/Release/  # 构建产物路径
