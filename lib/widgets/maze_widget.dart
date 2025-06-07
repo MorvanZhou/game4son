@@ -71,40 +71,43 @@ class _MazeWidgetState extends State<MazeWidget> with TickerProviderStateMixin {
     // Dialog display is handled in GameScreen to avoid duplication
   }
 
+  // Add method to handle player movement with sound effect
+  void _movePlayer(Direction direction) {
+    bool moved = widget.gameModel.movePlayer(direction);
+    if (moved) {
+      _soundManager.playMoveSound();
+    }
+  }
+
+  // Handle keyboard input for desktop platforms
   KeyEventResult _handleKeyPress(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
       bool handled = false;
-      bool moved = false;
       
       if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-        moved = widget.gameModel.movePlayer(Direction.up);
+        _movePlayer(Direction.up);
         handled = true;
       } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-        moved = widget.gameModel.movePlayer(Direction.down);
+        _movePlayer(Direction.down);
         handled = true;
       } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        moved = widget.gameModel.movePlayer(Direction.left);
+        _movePlayer(Direction.left);
         handled = true;
       } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        moved = widget.gameModel.movePlayer(Direction.right);
+        _movePlayer(Direction.right);
         handled = true;
       } else if (event.logicalKey == LogicalKeyboardKey.keyW) {
-        moved = widget.gameModel.movePlayer(Direction.up);
+        _movePlayer(Direction.up);
         handled = true;
       } else if (event.logicalKey == LogicalKeyboardKey.keyS) {
-        moved = widget.gameModel.movePlayer(Direction.down);
+        _movePlayer(Direction.down);
         handled = true;
       } else if (event.logicalKey == LogicalKeyboardKey.keyA) {
-        moved = widget.gameModel.movePlayer(Direction.left);
+        _movePlayer(Direction.left);
         handled = true;
       } else if (event.logicalKey == LogicalKeyboardKey.keyD) {
-        moved = widget.gameModel.movePlayer(Direction.right);
+        _movePlayer(Direction.right);
         handled = true;
-      }
-      
-      // Play sound effect if movement was successful
-      if (moved) {
-        _soundManager.playMoveSound();
       }
       
       return handled ? KeyEventResult.handled : KeyEventResult.ignored;
@@ -112,68 +115,275 @@ class _MazeWidgetState extends State<MazeWidget> with TickerProviderStateMixin {
     return KeyEventResult.ignored;
   }
 
+  // Handle swipe gestures for mobile devices with improved sensitivity
+  double _totalDeltaX = 0.0;
+  double _totalDeltaY = 0.0;
+  bool _hasMovedInCurrentGesture = false;
+
+  void _handlePanStart(DragStartDetails details) {
+    // Reset gesture tracking
+    _totalDeltaX = 0.0;
+    _totalDeltaY = 0.0;
+    _hasMovedInCurrentGesture = false;
+  }
+
+  void _handlePanUpdate(DragUpdateDetails details) {
+    // Accumulate total movement for better gesture recognition
+    _totalDeltaX += details.delta.dx;
+    _totalDeltaY += details.delta.dy;
+    
+    // Increase threshold for better small screen experience and avoid accidental triggers
+    const double threshold = 35.0;
+    
+    // Only trigger movement once per gesture to avoid rapid repeated movements
+    if (!_hasMovedInCurrentGesture) {
+      if (_totalDeltaX.abs() > _totalDeltaY.abs()) {
+        // Horizontal movement
+        if (_totalDeltaX > threshold) {
+          _movePlayer(Direction.right);
+          _hasMovedInCurrentGesture = true;
+        } else if (_totalDeltaX < -threshold) {
+          _movePlayer(Direction.left);
+          _hasMovedInCurrentGesture = true;
+        }
+      } else {
+        // Vertical movement
+        if (_totalDeltaY > threshold) {
+          _movePlayer(Direction.down);
+          _hasMovedInCurrentGesture = true;
+        } else if (_totalDeltaY < -threshold) {
+          _movePlayer(Direction.up);
+          _hasMovedInCurrentGesture = true;
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Focus(
-      focusNode: _focusNode,
-      autofocus: true,
-      onKeyEvent: _handleKeyPress,
-      child: GestureDetector(
-        onTap: () => _focusNode.requestFocus(),
-        child: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF0A0A0A),
-                const Color(0xFF1A1A1A),
+    return Column(
+      children: [
+        // Main maze area with touch controls
+        Expanded(
+          child: Focus(
+            focusNode: _focusNode,
+            autofocus: true,
+            onKeyEvent: _handleKeyPress,
+            child: GestureDetector(
+              onTap: () => _focusNode.requestFocus(),
+              onPanStart: _handlePanStart, // Add pan start handler
+              onPanUpdate: _handlePanUpdate, // Add swipe gesture support with improved tracking
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      const Color(0xFF0A0A0A),
+                      const Color(0xFF1A1A1A),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: _focusNode.hasFocus 
+                        ? const Color(0xFF00FFFF)
+                        : const Color(0xFF00FFFF).withOpacity(0.3),
+                    width: _focusNode.hasFocus ? 2.0 : 1.0,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _focusNode.hasFocus 
+                          ? const Color(0xFF00FFFF).withOpacity(0.5)
+                          : Colors.black.withOpacity(0.3),
+                      blurRadius: _focusNode.hasFocus ? 20 : 8,
+                      offset: const Offset(0, 4),
+                    ),
+                    if (_focusNode.hasFocus)
+                      BoxShadow(
+                        color: const Color(0xFF00FFFF).withOpacity(0.2),
+                        blurRadius: 40,
+                        spreadRadius: 5,
+                      ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: AspectRatio(
+                    aspectRatio: 1.0,
+                    child: AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          painter: CyberMazePainter(
+                            maze: widget.gameModel.maze,
+                            player: widget.gameModel.player,
+                            mazeWidth: widget.gameModel.mazeWidth,
+                            mazeHeight: widget.gameModel.mazeHeight,
+                            animationValue: _animationController.value,
+                            pulseValue: _pulseAnimation.value,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Virtual D-pad for mobile devices
+        _buildVirtualControls(),
+      ],
+    );
+  }
+
+  // Build virtual directional controls for mobile platforms
+  Widget _buildVirtualControls() {
+    // Only show virtual controls on mobile platforms
+    bool isMobile = Theme.of(context).platform == TargetPlatform.android || 
+                   Theme.of(context).platform == TargetPlatform.iOS;
+    
+    if (!isMobile) {
+      return const SizedBox.shrink(); // Hide on desktop
+    }
+
+    // Get screen size for responsive design
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400;
+    
+    // Adjust sizes based on screen size
+    final controlAreaSize = isSmallScreen ? 180.0 : 200.0;
+    final buttonSize = isSmallScreen ? 65.0 : 75.0;
+    final buttonIconSize = isSmallScreen ? 28.0 : 32.0;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Instructions for mobile users
+          Text(
+            'Swipe on maze or use buttons below',
+            style: TextStyle(
+              color: const Color(0xFF00FFFF).withOpacity(0.7),
+              fontSize: isSmallScreen ? 11 : 12,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Virtual D-pad with improved layout
+          Container(
+            width: controlAreaSize,
+            height: controlAreaSize,
+            child: Stack(
+              children: [
+                // Center circle for visual guidance
+                Positioned(
+                  left: (controlAreaSize - 40) / 2,
+                  top: (controlAreaSize - 40) / 2,
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF00FFFF).withAlpha(60),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+                // Up button
+                Positioned(
+                  top: 0,
+                  left: (controlAreaSize - buttonSize) / 2,
+                  child: _buildDirectionButton(
+                    icon: Icons.keyboard_arrow_up,
+                    direction: Direction.up,
+                    size: buttonSize,
+                    iconSize: buttonIconSize,
+                  ),
+                ),
+                // Down button
+                Positioned(
+                  bottom: 0,
+                  left: (controlAreaSize - buttonSize) / 2,
+                  child: _buildDirectionButton(
+                    icon: Icons.keyboard_arrow_down,
+                    direction: Direction.down,
+                    size: buttonSize,
+                    iconSize: buttonIconSize,
+                  ),
+                ),
+                // Left button
+                Positioned(
+                  left: 0,
+                  top: (controlAreaSize - buttonSize) / 2,
+                  child: _buildDirectionButton(
+                    icon: Icons.keyboard_arrow_left,
+                    direction: Direction.left,
+                    size: buttonSize,
+                    iconSize: buttonIconSize,
+                  ),
+                ),
+                // Right button
+                Positioned(
+                  right: 0,
+                  top: (controlAreaSize - buttonSize) / 2,
+                  child: _buildDirectionButton(
+                    icon: Icons.keyboard_arrow_right,
+                    direction: Direction.right,
+                    size: buttonSize,
+                    iconSize: buttonIconSize,
+                  ),
+                ),
               ],
             ),
-            border: Border.all(
-              color: _focusNode.hasFocus 
-                  ? const Color(0xFF00FFFF)
-                  : const Color(0xFF00FFFF).withOpacity(0.3),
-              width: _focusNode.hasFocus ? 2.0 : 1.0,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: _focusNode.hasFocus 
-                    ? const Color(0xFF00FFFF).withOpacity(0.5)
-                    : Colors.black.withOpacity(0.3),
-                blurRadius: _focusNode.hasFocus ? 20 : 8,
-                offset: const Offset(0, 4),
-              ),
-              if (_focusNode.hasFocus)
-                BoxShadow(
-                  color: const Color(0xFF00FFFF).withOpacity(0.2),
-                  blurRadius: 40,
-                  spreadRadius: 5,
-                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build individual direction button with adjustable size for better mobile experience
+  Widget _buildDirectionButton({
+    required IconData icon,
+    required Direction direction,
+    double size = 60.0,
+    double iconSize = 24.0,
+  }) {
+    return GestureDetector(
+      onTap: () => _movePlayer(direction),
+      // Add larger touch area for easier tapping
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF2A2A2A),
+              const Color(0xFF1A1A1A),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: AspectRatio(
-              aspectRatio: 1.0,            child: AnimatedBuilder(
-              animation: _animationController,
-              builder: (context, child) {
-                return CustomPaint(
-                  painter: CyberMazePainter(
-                    maze: widget.gameModel.maze,
-                    player: widget.gameModel.player,
-                    mazeWidth: widget.gameModel.mazeWidth,
-                    mazeHeight: widget.gameModel.mazeHeight,
-                    animationValue: _animationController.value,
-                    pulseValue: _pulseAnimation.value,
-                  ),
-                );
-              },
-            ),
-            ),
+          border: Border.all(
+            color: const Color(0xFF00FFFF).withAlpha(125),
+            width: 2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF00FFFF).withAlpha(80),
+              blurRadius: 8,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          color: const Color(0xFF00FFFF),
+          size: iconSize,
         ),
       ),
     );
