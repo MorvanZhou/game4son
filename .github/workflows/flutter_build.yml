@@ -130,7 +130,7 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build ios --release --no-codesign  # 构建 iOS 应用，但不签名（用于测试）
-      - run: tar -czvf ios.tar.gz -C build/ios/iphoneos maze.app  # 压缩打包
+      - run: tar -czvf ios.tar.gz -C build/ios/iphoneos Runner.app  # 压缩打包
       - uses: softprops/action-gh-release@v2
         with:
           files: ios.tar.gz
