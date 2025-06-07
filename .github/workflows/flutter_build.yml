@@ -1,0 +1,45 @@
+name: Flutter Build macOS
+
+on:
+  push:
+    branches: [ main ]   # 触发条件
+  workflow_dispatch:     # 允许手动触发
+
+jobs:
+  build:
+    runs-on: macos-latest  # 必须使用 macOS 环境
+    timeout-minutes: 30    # 避免超时
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.5'  # 指定版本
+          channel: stable
+
+      - name: Enable macOS Desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          cd macos && pod install
+
+      - name: Build macOS App (Release)
+        run: flutter build macos --release
+        env:
+          DEVELOPER_TEAM: ${{ secrets.DEVELOPER_TEAM }}  # 签名团队 ID
+
+      - name: Package .app into .zip
+        run: |
+          cd build/macos/Build/Products/Release/
+          zip -r MyApp.zip MyApp.app
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-app
+          path: build/macos/Build/Products/Release/MyApp.zip
