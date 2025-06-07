@@ -3,7 +3,8 @@ name: Build Flutter macOS App
 on:
   workflow_dispatch:
   release:
-    types: [published]
+    tags:
+      - '*'  # 匹配所有 tag，例如 v1.0.0
 
 jobs:
   build:
