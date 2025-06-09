@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../games/maze/screens/maze_game_screen.dart';
 import '../games/dino-jump/screens/dino_game_screen.dart';
+import '../games/gomoku/screens/gomoku_game_screen.dart';
 
 class GameCollectionHome extends StatefulWidget {
   const GameCollectionHome({super.key});
@@ -105,10 +106,10 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(30),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10), // 减少padding
       child: Column(
         children: [
-          // 主标题
+          // 主标题 - 减少字体大小
           ShaderMask(
             shaderCallback: (bounds) => const LinearGradient(
               colors: [
@@ -118,24 +119,12 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
               ],
             ).createShader(bounds),
             child: const Text(
-              '游戏合集',
+              'Game4son',
               style: TextStyle(
-                fontSize: 48,
+                fontSize: 32, // 从48减少到32
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
-            ),
-          ),
-          
-          const SizedBox(height: 10),
-          
-          // 副标题
-          Text(
-            '选择你喜欢的游戏开始挑战',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.white.withOpacity(0.8),
-              fontWeight: FontWeight.w300,
             ),
           ),
         ],
@@ -150,17 +139,17 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
         return Transform.scale(
           scale: _cardAnimation.value,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 15), // 减少水平padding
             child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: 0.85,
+              crossAxisCount: 3, // 3列布局
+              crossAxisSpacing: 12, // 减少间距
+              mainAxisSpacing: 12, // 减少间距
+              childAspectRatio: 1.0, // 正方形卡片
+              physics: const BouncingScrollPhysics(), // 添加滚动物理效果
               children: [
                 // 迷宫游戏卡片
                 _buildGameCard(
                   title: '迷宫探险',
-                  description: '在迷宫中寻找出路\n挑战你的空间感知力',
                   icon: Icons.route,
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
@@ -183,8 +172,7 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
                 // 恐龙跳跃游戏卡片
                 _buildGameCard(
                   title: '恐龙跳跃',
-                  description: '经典的横版跳跃游戏\n躲避障碍物获得高分',
-                  icon: Icons.play_arrow,
+                  icon: Icons.directions_run,
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -203,16 +191,41 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
                   },
                 ),
                 
-                _buildComingSoonCard(
-                  title: '数字拼图',
-                  description: '经典的滑动拼图游戏\n锻炼逻辑思维能力',
-                  icon: Icons.grid_3x3,
+                // 五子棋游戏卡片
+                _buildGameCard(
+                  title: '五子棋',
+                  icon: Icons.grid_on,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFFF6B6B),
+                      Color(0xFFFF8E8E),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GomokuGameScreen(),
+                      ),
+                    );
+                  },
                 ),
                 
                 _buildComingSoonCard(
                   title: '记忆翻牌',
-                  description: '测试记忆力的翻牌游戏\n提升专注力和记忆力',
                   icon: Icons.memory,
+                ),
+                
+                _buildComingSoonCard(
+                  title: '数字拼图',
+                  icon: Icons.grid_3x3,
+                ),
+                
+                _buildComingSoonCard(
+                  title: '扫雷游戏',
+                  icon: Icons.flag,
                 ),
               ],
             ),
@@ -224,7 +237,6 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
 
   Widget _buildGameCard({
     required String title,
-    required String description,
     required IconData icon,
     required Gradient gradient,
     required VoidCallback onTap,
@@ -234,63 +246,52 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
       child: Container(
         decoration: BoxDecoration(
           gradient: gradient,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
             onTap: onTap,
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // 游戏图标
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       icon,
-                      size: 40,
+                      size: 45,
                       color: Colors.white,
                     ),
                   ),
                   
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   
                   // 游戏标题
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                     textAlign: TextAlign.center,
-                  ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  // 游戏描述
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withOpacity(0.9),
-                      height: 1.4,
-                    ),
-                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -303,7 +304,6 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
 
   Widget _buildComingSoonCard({
     required String title,
-    required String description,
     required IconData icon,
   }) {
     return Container(
@@ -316,65 +316,54 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
             Colors.grey.withOpacity(0.1),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Colors.white.withOpacity(0.2),
           width: 1,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // 游戏图标
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                size: 40,
+                size: 32,
                 color: Colors.white.withOpacity(0.6),
               ),
             ),
             
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             
             // 游戏标题
             Text(
               title,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: Colors.white.withOpacity(0.6),
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             
-            const SizedBox(height: 8),
-            
-            // 游戏描述
-            Text(
-              description,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white.withOpacity(0.5),
-                height: 1.4,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
             
             // 即将推出标签
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.3),
                   width: 1,
@@ -383,7 +372,7 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
               child: Text(
                 '即将推出',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 10,
                   color: Colors.white.withOpacity(0.7),
                   fontWeight: FontWeight.w500,
                 ),
