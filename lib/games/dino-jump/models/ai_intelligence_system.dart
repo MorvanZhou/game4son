@@ -71,18 +71,28 @@ class AIIntelligenceSystem {
     double cactusWeight = 1.0;
     double birdWeight = 0.0; // 初始时飞鸟概率为0
     
-    // 根据分数阶段调整飞鸟出现概率
-    if (score >= 50) {
-      birdWeight = 0.2; // 50分后开始出现飞鸟
+    // 🦅 7阶段渐进式飞鸟出现规则 - 平缓难度曲线优化
+    // 让玩家有足够时间学习跳跃机制后再引入飞鸟
+    if (score >= 150) {
+      birdWeight = 0.25; // 150分开始飞鸟认知阶段
     }
-    if (score >= 200) {
-      birdWeight = 0.4; // 200分后增加飞鸟概率
+    if (score >= 250) {
+      birdWeight = 0.33; // 250分初步学习阶段（平缓增长）
     }
-    if (score >= 400) {
-      birdWeight = 0.6; // 400分后进一步增加
+    if (score >= 350) {
+      birdWeight = 0.40; // 350分技能建立阶段
     }
-    if (score >= 1000) {
-      birdWeight = 0.8; // 1000分后高概率飞鸟
+    if (score >= 450) {
+      birdWeight = 0.46; // 450分能力巩固阶段（关键优化）
+    }
+    if (score >= 600) {
+      birdWeight = 0.51; // 600分平衡挑战阶段（微调增长）
+    }
+    if (score >= 800) {
+      birdWeight = 0.57; // 800分高级挑战阶段
+    }
+    if (score >= 1200) {
+      birdWeight = 0.65; // 1200分大师级挑战（最终概率）
     }
     
     // 根据连续计数调整权重（避免单调）

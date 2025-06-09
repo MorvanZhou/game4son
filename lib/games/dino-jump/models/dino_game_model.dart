@@ -82,6 +82,21 @@ class DinoGameModel extends ChangeNotifier {
     }
   }
 
+  /// 恐龙蹲下
+  void duck() {
+    // 只有在游戏进行中才能蹲下
+    if (_gameState == DinoGameState.playing) {
+      _physicsEngine.duck();
+      // 播放蹲下音效（如果有的话）
+      // _soundManager.playDuckSound();
+    }
+  }
+  
+  /// 停止蹲下
+  void stopDucking() {
+    _physicsEngine.stopDucking();
+  }
+
   /// 重新开始游戏
   void restart() {
     startGame();
@@ -200,7 +215,11 @@ class DinoGameModel extends ChangeNotifier {
 
   /// 更新得分
   void _updateScore() {
-    int scoreIncrement = _obstacleSystem.updateScore(_physicsEngine.dinoX);
+    int scoreIncrement = _obstacleSystem.updateScore(
+      _physicsEngine.dinoX, 
+      score, 
+      _difficultySystem.gameSpeed
+    );
     score += scoreIncrement;
   }
 
@@ -229,6 +248,9 @@ class DinoGameModel extends ChangeNotifier {
   
   /// 获取恐龙是否在地面
   bool get dinoOnGround => _physicsEngine.dinoOnGround;
+  
+  /// 获取恐龙是否在蹲下
+  bool get dinoDucking => _physicsEngine.dinoDucking;
   
   /// 获取地面Y坐标（屏幕坐标系）
   double get groundY => gameHeight - groundHeight;

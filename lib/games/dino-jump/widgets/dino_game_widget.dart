@@ -229,65 +229,121 @@ class DinoGamePainter extends CustomPainter {
     double width = gameModel.dinoWidth;
     double height = gameModel.dinoHeight;
 
-    // 恐龙身体（矩形）
-    final Rect body = Rect.fromLTWH(x + width * 0.2, y + height * 0.3, width * 0.6, height * 0.5);
-    canvas.drawRect(body, dinoPaint);
+    // 根据蹲下状态调整恐龙形状
+    if (gameModel.dinoDucking) {
+      // 蹲下状态：恐龙高度减半，形状压缩
+      height = height * 0.5;
+      
+      // 恐龙身体（更宽更扁）
+      final Rect body = Rect.fromLTWH(x + width * 0.1, y + height * 0.2, width * 0.8, height * 0.6);
+      canvas.drawRect(body, dinoPaint);
 
-    // 恐龙头部（圆形）
-    final Rect head = Rect.fromLTWH(x + width * 0.1, y, width * 0.5, height * 0.4);
-    canvas.drawOval(head, dinoPaint);
+      // 恐龙头部（椭圆形，更扁）
+      final Rect head = Rect.fromLTWH(x + width * 0.05, y, width * 0.6, height * 0.5);
+      canvas.drawOval(head, dinoPaint);
 
-    // 恐龙尾巴
-    final Path tail = Path();
-    tail.moveTo(x + width * 0.2, y + height * 0.5);
-    tail.quadraticBezierTo(
-      x - width * 0.3, y + height * 0.3,
-      x - width * 0.1, y + height * 0.7,
-    );
-    tail.lineTo(x, y + height * 0.8);
-    tail.lineTo(x + width * 0.2, y + height * 0.6);
-    tail.close();
-    canvas.drawPath(tail, dinoPaint);
+      // 恐龙尾巴（更低）
+      final Path tail = Path();
+      tail.moveTo(x + width * 0.1, y + height * 0.5);
+      tail.quadraticBezierTo(
+        x - width * 0.2, y + height * 0.3,
+        x - width * 0.05, y + height * 0.8,
+      );
+      tail.lineTo(x, y + height);
+      tail.lineTo(x + width * 0.15, y + height * 0.7);
+      tail.close();
+      canvas.drawPath(tail, dinoPaint);
 
-    // 恐龙腿部（根据是否在地面调整）
-    if (gameModel.dinoOnGround) {
-      // 左腿
-      final Rect leftLeg = Rect.fromLTWH(x + width * 0.3, y + height * 0.7, width * 0.15, height * 0.3);
+      // 蹲下状态的腿部（贴地）
+      final Rect leftLeg = Rect.fromLTWH(x + width * 0.25, y + height * 0.7, width * 0.2, height * 0.3);
       canvas.drawRect(leftLeg, dinoPaint);
       
-      // 右腿
-      final Rect rightLeg = Rect.fromLTWH(x + width * 0.55, y + height * 0.7, width * 0.15, height * 0.3);
+      final Rect rightLeg = Rect.fromLTWH(x + width * 0.55, y + height * 0.7, width * 0.2, height * 0.3);
       canvas.drawRect(rightLeg, dinoPaint);
+
+      // 恐龙眼睛（位置调整）
+      final Paint eyePaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      
+      canvas.drawCircle(
+        Offset(x + width * 0.35, y + height * 0.15),
+        2.5,
+        eyePaint,
+      );
+
+      // 眼珠
+      final Paint pupilPaint = Paint()
+        ..color = Colors.black
+        ..style = PaintingStyle.fill;
+      
+      canvas.drawCircle(
+        Offset(x + width * 0.37, y + height * 0.15),
+        1.2,
+        pupilPaint,
+      );
     } else {
-      // 跳跃状态：腿部收起
-      final Rect leftLeg = Rect.fromLTWH(x + width * 0.35, y + height * 0.8, width * 0.12, height * 0.2);
-      canvas.drawRect(leftLeg, dinoPaint);
+      // 正常状态：保持原来的绘制逻辑
+      // 恐龙身体（矩形）
+      final Rect body = Rect.fromLTWH(x + width * 0.2, y + height * 0.3, width * 0.6, height * 0.5);
+      canvas.drawRect(body, dinoPaint);
+
+      // 恐龙头部（圆形）
+      final Rect head = Rect.fromLTWH(x + width * 0.1, y, width * 0.5, height * 0.4);
+      canvas.drawOval(head, dinoPaint);
+
+      // 恐龙尾巴
+      final Path tail = Path();
+      tail.moveTo(x + width * 0.2, y + height * 0.5);
+      tail.quadraticBezierTo(
+        x - width * 0.3, y + height * 0.3,
+        x - width * 0.1, y + height * 0.7,
+      );
+      tail.lineTo(x, y + height * 0.8);
+      tail.lineTo(x + width * 0.2, y + height * 0.6);
+      tail.close();
+      canvas.drawPath(tail, dinoPaint);
+
+      // 恐龙腿部（根据是否在地面调整）
+      if (gameModel.dinoOnGround) {
+        // 左腿
+        final Rect leftLeg = Rect.fromLTWH(x + width * 0.3, y + height * 0.7, width * 0.15, height * 0.3);
+        canvas.drawRect(leftLeg, dinoPaint);
+        
+        // 右腿
+        final Rect rightLeg = Rect.fromLTWH(x + width * 0.55, y + height * 0.7, width * 0.15, height * 0.3);
+        canvas.drawRect(rightLeg, dinoPaint);
+      } else {
+        // 跳跃状态：腿部收起
+        final Rect leftLeg = Rect.fromLTWH(x + width * 0.35, y + height * 0.8, width * 0.12, height * 0.2);
+        canvas.drawRect(leftLeg, dinoPaint);
+        
+        final Rect rightLeg = Rect.fromLTWH(x + width * 0.53, y + height * 0.8, width * 0.12, height * 0.2);
+        canvas.drawRect(rightLeg, dinoPaint);
+      }
+
+      // 恐龙眼睛
+      final Paint eyePaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
       
-      final Rect rightLeg = Rect.fromLTWH(x + width * 0.53, y + height * 0.8, width * 0.12, height * 0.2);
-      canvas.drawRect(rightLeg, dinoPaint);
+      canvas.drawCircle(
+        Offset(x + width * 0.45, y + height * 0.15),
+        3,
+        eyePaint,
+      );
+
+      // 眼珠
+      final Paint pupilPaint = Paint()
+        ..color = Colors.black
+        ..style = PaintingStyle.fill;
+      
+      canvas.drawCircle(
+        Offset(x + width * 0.47, y + height * 0.15),
+        1.5,
+        pupilPaint,
+      );
     }
-
-    // 恐龙眼睛
-    final Paint eyePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    
-    canvas.drawCircle(
-      Offset(x + width * 0.45, y + height * 0.15),
-      3,
-      eyePaint,
-    );
-
-    // 眼珠
-    final Paint pupilPaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.fill;
-    
-    canvas.drawCircle(
-      Offset(x + width * 0.47, y + height * 0.15),
-      1.5,
-      pupilPaint,
-    );
   }
 
   // 绘制游戏状态覆盖层
@@ -310,9 +366,9 @@ class DinoGamePainter extends CustomPainter {
     _drawCenteredText(
       canvas,
       size,
-      '按空格或点击开始',
+      '↑跳跃 ↓蹲下 | 点击上半屏跳跃，下半屏蹲下',
       const TextStyle(
-        fontSize: 24,
+        fontSize: 20,
         color: Colors.white,
         fontWeight: FontWeight.bold,
       ),
@@ -343,7 +399,7 @@ class DinoGamePainter extends CustomPainter {
     _drawCenteredText(
       canvas,
       size,
-      '点击重新开始',
+      '↑跳跃 ↓蹲下 | 点击重新开始',
       const TextStyle(
         fontSize: 18,
         color: Colors.white70,

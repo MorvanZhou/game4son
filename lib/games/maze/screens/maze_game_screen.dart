@@ -122,7 +122,7 @@ class _MazeGameScreenState extends State<MazeGameScreen> with TickerProviderStat
             onPressed: () {
               Navigator.of(context).pop();
               gameModel.resumeGame();
-              soundManager.resumeBackgroundMusic(); // Resume background music
+              // 音频在简化架构中自动管理，不需要手动恢复
             },
           ),
           _buildCyberButton(
@@ -251,10 +251,10 @@ class _MazeGameScreenState extends State<MazeGameScreen> with TickerProviderStat
         ),
         actions: [
           _buildNeonButton(
-            icon: soundManager.musicEnabled ? Icons.music_note : Icons.music_off,
+            icon: soundManager.audioEnabled ? Icons.volume_up : Icons.volume_off,
             onPressed: () {
               setState(() {
-                soundManager.toggleMusic();
+                soundManager.toggleAudio();
               });
             },
           ),
@@ -262,7 +262,7 @@ class _MazeGameScreenState extends State<MazeGameScreen> with TickerProviderStat
             icon: Icons.pause,
             onPressed: () {
               gameModel.pauseGame();
-              soundManager.pauseBackgroundMusic(); // Pause background music
+              // 音频在简化架构中自动管理，不需要手动暂停
               _showPauseDialog();
             },
           ),

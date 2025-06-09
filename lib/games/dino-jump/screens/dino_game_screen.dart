@@ -59,7 +59,11 @@ class _DinoGameScreenState extends State<DinoGameScreen>
     gameModel.removeListener(_onGameStateChanged);
     _backgroundController.dispose();
     _keyboardFocusNode.dispose(); // 释放焦点节点
+    
+    // 🔊 退出游戏时停止背景音乐，释放音频资源
+    soundManager.stopGameMusic();
     soundManager.dispose();
+    
     super.dispose();
   }
 
@@ -88,17 +92,22 @@ class _DinoGameScreenState extends State<DinoGameScreen>
     }
     _lastUpdateTime = now;
     
+    // 确保键盘监听器始终有焦点
+    if (!_keyboardFocusNode.hasFocus) {
+      _keyboardFocusNode.requestFocus();
+    }
+    
     // 使用WidgetsBinding确保在下一帧调用
     WidgetsBinding.instance.addPostFrameCallback((_) => _gameLoop());
   }
 
-  // 处理键盘输入 - 阻止系统默认按键音效和重复按键
+  // 处理键盘输入 - 支持上下箭头键控制跳跃和蹲下
   KeyEventResult _handleKeyEvent(KeyEvent event) {
     final key = event.logicalKey;
     
     if (event is KeyDownEvent) {
-      // 检查是否为跳跃按键
-      if (key == LogicalKeyboardKey.space || key == LogicalKeyboardKey.arrowUp) {
+      // 检查是否为上箭头键（跳跃）
+      if (key == LogicalKeyboardKey.arrowUp) {
         // 防止重复按键处理
         if (_pressedKeys.contains(key)) {
           return KeyEventResult.handled;
@@ -110,7 +119,25 @@ class _DinoGameScreenState extends State<DinoGameScreen>
         // 返回handled告诉系统我们已经处理了这个按键，阻止系统默认行为
         return KeyEventResult.handled;
       }
+      // 检查是否为下箭头键（蹲下）
+      else if (key == LogicalKeyboardKey.arrowDown) {
+        // 防止重复按键处理
+        if (_pressedKeys.contains(key)) {
+          return KeyEventResult.handled;
+        }
+        
+        _pressedKeys.add(key);
+        gameModel.duck();
+        
+        // 返回handled告诉系统我们已经处理了这个按键，阻止系统默认行为
+        return KeyEventResult.handled;
+      }
     } else if (event is KeyUpEvent) {
+      // 按键释放时的处理
+      if (key == LogicalKeyboardKey.arrowDown) {
+        // 下箭头键释放时停止蹲下
+        gameModel.stopDucking();
+      }
       // 按键释放时从集合中移除
       _pressedKeys.remove(key);
     }
@@ -135,22 +162,15 @@ class _DinoGameScreenState extends State<DinoGameScreen>
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF535353)),
         actions: [
-          // 全局音频控制按钮 - 一键控制所有声音
+          // 🔊 全局音频控制按钮 - 简化的一键控制
           IconButton(
             icon: Icon(
-              (soundManager.musicEnabled || soundManager.effectsEnabled) 
-                ? Icons.volume_up 
-                : Icons.volume_off,
+              soundManager.audioEnabled ? Icons.volume_up : Icons.volume_off,
               color: const Color(0xFF535353),
             ),
             onPressed: () {
               setState(() {
-                // 如果有任何音频开启，则全部静音；如果全部静音，则全部开启
-                if (soundManager.musicEnabled || soundManager.effectsEnabled) {
-                  soundManager.muteAll();
-                } else {
-                  soundManager.unmuteAll();
-                }
+                soundManager.toggleAudio(); // 简化的音频切换
               });
             },
           ),
@@ -167,10 +187,39 @@ class _DinoGameScreenState extends State<DinoGameScreen>
         ],
       ),
       body: KeyboardListener(
-        focusNode: _keyboardFocusNode..requestFocus(),
+        focusNode: _keyboardFocusNode,
+        autofocus: true,
         onKeyEvent: _handleKeyEvent,
         child: GestureDetector(
-          onTap: () => gameModel.jump(), // 点击屏幕跳跃
+          onTapDown: (details) {
+            // 确保键盘监听器保持焦点
+            _keyboardFocusNode.requestFocus();
+            
+            // 获取点击位置
+            final tapY = details.localPosition.dy;
+            final screenHeight = context.size?.height ?? 600;
+            
+            // 将屏幕分为上下两部分
+            if (tapY < screenHeight * 0.5) {
+              // 点击屏幕上半部分：跳跃
+              gameModel.jump();
+            } else {
+              // 点击屏幕下半部分：蹲下
+              gameModel.duck();
+            }
+          },
+          onTapUp: (details) {
+            // 松手时停止蹲下
+            gameModel.stopDucking();
+            // 确保键盘监听器保持焦点
+            _keyboardFocusNode.requestFocus();
+          },
+          onTapCancel: () {
+            // 取消点击时也停止蹲下
+            gameModel.stopDucking();
+            // 确保键盘监听器保持焦点
+            _keyboardFocusNode.requestFocus();
+          },
           child: Container(
             width: double.infinity,
             height: double.infinity,
@@ -305,11 +354,16 @@ class _DinoGameScreenState extends State<DinoGameScreen>
   // 根据难度等级获取颜色
   Color _getDifficultyColor(int level) {
     switch (level) {
-      case 1: return const Color(0xFF4CAF50); // 绿色 - 简单
-      case 2: return const Color(0xFF2196F3); // 蓝色 - 普通
-      case 3: return const Color(0xFFFF9800); // 橙色 - 困难
-      case 4: return const Color(0xFFFF5722); // 红色 - 专家
-      case 5: return const Color(0xFF9C27B0); // 紫色 - 大师
+      case 1: return const Color(0xFF4CAF50); // 绿色 - 新手引导
+      case 2: return const Color(0xFF66BB6A); // 浅绿 - 入门熟悉
+      case 3: return const Color(0xFF2196F3); // 蓝色 - 基础掌握
+      case 4: return const Color(0xFF42A5F5); // 浅蓝 - 技能提升
+      case 5: return const Color(0xFFFF9800); // 橙色 - 高手进阶
+      case 6: return const Color(0xFFFFB74D); // 浅橙 - 专家级别
+      case 7: return const Color(0xFFFF5722); // 红色 - 大师水准
+      case 8: return const Color(0xFFE91E63); // 粉红 - 传奇玩家
+      case 9: return const Color(0xFF9C27B0); // 紫色 - 超凡境界
+      case 10: return const Color(0xFF673AB7); // 深紫 - 神话级别
       default: return const Color(0xFF666666);
     }
   }
@@ -329,7 +383,7 @@ class _DinoGameScreenState extends State<DinoGameScreen>
               
               switch (gameModel.gameState) {
                 case DinoGameState.ready:
-                  statusText = '点击屏幕或按空格键开始游戏';
+                  statusText = '点击屏幕或按上键开始游戏';
                   statusColor = const Color(0xFF666666);
                   break;
                 case DinoGameState.playing:
@@ -381,7 +435,7 @@ class _DinoGameScreenState extends State<DinoGameScreen>
               ),
               SizedBox(width: 8),
               Text(
-                '空格键 / ↑',
+                '↑↓键控制 或 点击屏幕',
                 style: TextStyle(
                   fontSize: 14,
                   color: Color(0xFF888888),

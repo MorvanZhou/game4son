@@ -14,64 +14,83 @@ class DifficultySystem {
   }
   
   /// 根据分数更新游戏速度
-  /// 实现非线性速度增长机制，提供明显的阶段性递进感
+  /// 🚀 现代化速度递进：平滑增长 + 关键节点突破
   void updateSpeed(int score) {
-    // 分阶段的非线性速度增长
+    // 基于新得分系统的速度递进
     double stageSpeedMultiplier;
     
-    if (score < 50) {
-      // 适应阶段(0-50分): 1.0x → 1.3x 速度倍数
-      double progress = score / 50.0;
-      stageSpeedMultiplier = 1.0 + progress * 0.3;
-    } else if (score < 200) {
-      // 入门阶段(50-200分): 1.3x → 1.7x 速度倍数
-      double progress = (score - 50) / 150.0;
-      stageSpeedMultiplier = 1.3 + progress * 0.4;
+    if (score < 30) {
+      // 新手引导(0-30分): 1.0x → 1.2x 速度倍数
+      double progress = score / 30.0;
+      stageSpeedMultiplier = 1.0 + progress * 0.2;
+    } else if (score < 80) {
+      // 入门熟悉(30-80分): 1.2x → 1.5x 速度倍数
+      double progress = (score - 30) / 50.0;
+      stageSpeedMultiplier = 1.2 + progress * 0.3;
+    } else if (score < 150) {
+      // 基础掌握(80-150分): 1.5x → 1.8x 速度倍数
+      double progress = (score - 80) / 70.0;
+      stageSpeedMultiplier = 1.5 + progress * 0.3;
+    } else if (score < 250) {
+      // 技能提升(150-250分): 1.8x → 2.2x 速度倍数
+      double progress = (score - 150) / 100.0;
+      stageSpeedMultiplier = 1.8 + progress * 0.4;
     } else if (score < 400) {
-      // 基础阶段(200-400分): 1.7x → 2.2x 速度倍数
-      double progress = (score - 200) / 200.0;
-      stageSpeedMultiplier = 1.7 + progress * 0.5;
-    } else if (score < 1000) {
-      // 进阶阶段(400-1000分): 2.2x → 2.8x 速度倍数
-      double progress = (score - 400) / 600.0;
-      stageSpeedMultiplier = 2.2 + progress * 0.6;
+      // 高手进阶(250-400分): 2.2x → 2.6x 速度倍数
+      double progress = (score - 250) / 150.0;
+      stageSpeedMultiplier = 2.2 + progress * 0.4;
+    } else if (score < 600) {
+      // 专家级别(400-600分): 2.6x → 2.9x 速度倍数
+      double progress = (score - 400) / 200.0;
+      stageSpeedMultiplier = 2.6 + progress * 0.3;
     } else {
-      // 极限阶段(1000分以上): 2.8x → 3.0x 速度倍数
-      double progress = math.min(1.0, (score - 1000) / 1000.0);
-      stageSpeedMultiplier = 2.8 + progress * 0.2;
+      // 大师以上(600分+): 2.9x → 3.0x 速度倍数
+      double progress = math.min(1.0, (score - 600) / 400.0);
+      stageSpeedMultiplier = 2.9 + progress * 0.1;
     }
     
     // 应用速度倍数，确保不超过最大速度
     gameSpeed = math.min(maxSpeed, baseSpeed * stageSpeedMultiplier);
     
-    // 关键分数节点的跳跃式加速，增加明显的递进感
-    List<int> majorAccelerationPoints = [50, 200, 400, 1000, 1500];
+    // 🎯 关键等级突破点的额外加速
+    List<int> levelBreakpoints = [30, 80, 150, 250, 400, 600, 900, 1300];
     
-    for (int point in majorAccelerationPoints) {
+    for (int point in levelBreakpoints) {
       if (score == point) {
-        // 在关键节点额外加速10%，制造明显的递进感
-        gameSpeed = math.min(maxSpeed, gameSpeed * 1.1);
+        // 在等级突破点额外加速8%，制造明显的升级感
+        gameSpeed = math.min(maxSpeed, gameSpeed * 1.08);
         break;
       }
     }
   }
   
   /// 获取当前游戏难度等级（用于UI显示）
+  /// 🎮 现代游戏设计：快速递进，给玩家持续的成就感
   int getDifficultyLevel(int score) {
-    if (score < 50) return 1;       // 初始阶段早期
-    if (score < 200) return 2;      // 初始阶段后期  
-    if (score < 400) return 3;      // 基础阶段
-    if (score < 1000) return 4;     // 进阶阶段
-    return 5;                       // 极限阶段
+    if (score < 30) return 1;        // 新手引导：6个障碍物即升级
+    if (score < 80) return 2;        // 入门熟悉：16个障碍物
+    if (score < 150) return 3;       // 基础掌握：30个障碍物
+    if (score < 250) return 4;       // 技能提升：50个障碍物
+    if (score < 400) return 5;       // 高手进阶：80个障碍物
+    if (score < 600) return 6;       // 专家级别：120个障碍物
+    if (score < 900) return 7;       // 大师水准：180个障碍物
+    if (score < 1300) return 8;      // 传奇玩家：260个障碍物
+    if (score < 1800) return 9;      // 超凡境界：360个障碍物
+    return 10;                       // 神话级别：无限挑战
   }
   
   /// 获取当前游戏阶段名称
   String getGameStageText(int score) {
-    if (score < 50) return "适应阶段";
-    if (score < 200) return "入门阶段";
-    if (score < 400) return "基础阶段";
-    if (score < 1000) return "进阶阶段";
-    return "极限阶段";
+    if (score < 30) return "新手引导";
+    if (score < 80) return "入门熟悉";
+    if (score < 150) return "基础掌握";
+    if (score < 250) return "技能提升";
+    if (score < 400) return "高手进阶";
+    if (score < 600) return "专家级别";
+    if (score < 900) return "大师水准";
+    if (score < 1300) return "传奇玩家";
+    if (score < 1800) return "超凡境界";
+    return "神话级别";
   }
   
   /// 获取当前速度百分比（相对于最大速度）
@@ -80,21 +99,27 @@ class DifficultySystem {
   /// 计算当前阶段的障碍物间距
   /// 根据分数阶段调整障碍物间距，分数越高间距越小
   double calculateObstacleDistance(int score, math.Random random) {
-    if (score < 50) {
-      // 适应阶段：宽松间距，给新手足够反应时间
-      return 400 + random.nextDouble() * 200; // 400-600像素
-    } else if (score < 200) {
-      // 入门阶段：开始收紧间距
-      return 320 + random.nextDouble() * 160; // 320-480像素
-    } else if (score < 400) {
-      // 基础阶段：明显收紧，开始有压迫感
+    if (score < 30) {
+      // 新手引导：超宽松间距，让新手有足够时间适应
+      return 450 + random.nextDouble() * 200; // 450-650像素
+    } else if (score < 80) {
+      // 入门熟悉：开始收紧间距
+      return 380 + random.nextDouble() * 160; // 380-540像素
+    } else if (score < 150) {
+      // 基础掌握：进一步收紧
+      return 320 + random.nextDouble() * 140; // 320-460像素
+    } else if (score < 250) {
+      // 技能提升：开始有压迫感
       return 280 + random.nextDouble() * 120; // 280-400像素
-    } else if (score < 1000) {
-      // 进阶阶段：高密度，考验反应速度
-      return 240 + random.nextDouble() * 80;  // 240-320像素
+    } else if (score < 400) {
+      // 高手进阶：高密度挑战
+      return 240 + random.nextDouble() * 100; // 240-340像素
+    } else if (score < 600) {
+      // 专家级别：极高密度
+      return 200 + random.nextDouble() * 80;  // 200-280像素
     } else {
-      // 极限阶段：极限密度，需要完美操控
-      return 200 + random.nextDouble() * 60;  // 200-260像素
+      // 大师以上：极限密度，完美操控
+      return 160 + random.nextDouble() * 60;  // 160-220像素
     }
   }
   

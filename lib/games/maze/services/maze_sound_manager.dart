@@ -1,56 +1,49 @@
 import '../../common/sound_manager.dart';
+import '../../../games/common/game_audio_config.dart';
 
-/// 迷宫游戏专用声音管理器
-/// 继承通用声音管理器，提供迷宫游戏特定的音效方法
+/// 🌟 迷宫游戏音频管理器 - 简化版
+/// 只负责调用简化音频管理器，提供游戏特定的便捷方法
 class MazeSoundManager {
   static final MazeSoundManager _instance = MazeSoundManager._internal();
   factory MazeSoundManager() => _instance;
   MazeSoundManager._internal();
 
-  // 使用通用声音管理器实例
-  final CommonSoundManager _soundManager = CommonSoundManager();
+  // 使用简化音频管理器
+  final SimpleSoundManager _audioManager = SimpleSoundManager();
 
-  // 代理基础功能
-  bool get soundEnabled => _soundManager.soundEnabled;
-  bool get musicEnabled => _soundManager.musicEnabled;
-  bool get isBackgroundMusicPlaying => _soundManager.isBackgroundMusicPlaying;
+  /// 全局音频开关状态
+  bool get audioEnabled => _audioManager.audioEnabled;
 
-  void toggleSound() => _soundManager.toggleSound();
-  void toggleMusic() => _soundManager.toggleMusic();
+  /// 切换全局音频开关
+  void toggleAudio() => _audioManager.toggleAudio();
 
-  /// 开始播放迷宫背景音乐
+  /// 开始迷宫背景音乐
   Future<void> startBackgroundMusic() async {
-    await _soundManager.startBackgroundMusic('sounds/maze-bg-loop.wav', volume: 0.3);
+    await _audioManager.playBackgroundMusic(GameAudioConfig.mazeBackgroundMusic);
   }
 
+  /// 停止背景音乐
   Future<void> stopBackgroundMusic() async {
-    await _soundManager.stopBackgroundMusic();
-  }
-
-  Future<void> pauseBackgroundMusic() async {
-    await _soundManager.pauseBackgroundMusic();
-  }
-
-  Future<void> resumeBackgroundMusic() async {
-    await _soundManager.resumeBackgroundMusic();
+    await _audioManager.stopBackgroundMusic();
   }
 
   /// 播放移动音效
   Future<void> playMoveSound() async {
-    await _soundManager.playEffect('sounds/move.flac');
+    await _audioManager.playEffect(GameAudioConfig.mazeMoveSound);
   }
 
   /// 播放关卡胜利音效
   Future<void> playWinSound() async {
-    await _soundManager.playEffectExclusive('sounds/win.flac');
+    await _audioManager.playEffect(GameAudioConfig.mazeWinSound);
   }
 
   /// 播放游戏完成音效
   Future<void> playCompleteSound() async {
-    await _soundManager.playEffectExclusive('sounds/complete.wav');
+    await _audioManager.playEffect(GameAudioConfig.mazeCompleteSound);
   }
 
+  /// 释放资源
   void dispose() {
-    _soundManager.dispose();
+    // 不需要释放，由简化音频管理器统一管理
   }
 }

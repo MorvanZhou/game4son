@@ -103,25 +103,56 @@ class ObstacleSystem {
     ));
   }
   
-  /// 生成单个飞鸟
+  /// 生成单个飞鸟 - 2024优化：更平缓的难度曲线
   void generateSingleBird(double x, int score, double groundHeight) {
-    // 根据分数阶段调整飞鸟属性
+    // 🦅 7阶段渐进式飞鸟高度规则：解决400分后的难度断崖问题
     double width, height, y;
-    if (score < 300) {
-      // 低分阶段：相对固定的低空飞行
-      width = 20 + _random.nextDouble() * 8; // 20-28
-      height = 12 + _random.nextDouble() * 8; // 12-20
-      y = groundHeight + 40 + _random.nextDouble() * 20; // 相对固定高度
-    } else if (score < 700) {
-      // 中分阶段：高度开始随机化
-      width = 25 + _random.nextDouble() * 10; // 25-35
-      height = 15 + _random.nextDouble() * 10; // 15-25
-      y = groundHeight + 30 + _random.nextDouble() * 40; // 更大高度范围
+    
+    if (score < 150) {
+      // 150分前不生成飞鸟，让玩家专注学习跳跃
+      return;
+    } else if (score < 250) {
+      // 阶段1：飞鸟认知阶段 (150-250分)
+      // 飞鸟飞在恐龙上方，让玩家看到但安全通过
+      width = 20 + _random.nextDouble() * 8;     // 20-28px
+      height = 12 + _random.nextDouble() * 8;    // 12-20px
+      y = groundHeight + 60 + _random.nextDouble() * 20;  // 60-80px 高度
+    } else if (score < 350) {
+      // 阶段2：初步学习阶段 (250-350分)  
+      // 开始降低飞鸟高度，让玩家逐步适应蹲下
+      width = 21 + _random.nextDouble() * 8;     // 21-29px
+      height = 13 + _random.nextDouble() * 8;    // 13-21px
+      y = groundHeight + 30 + _random.nextDouble() * 15;  // 30-45px 高度
+    } else if (score < 450) {
+      // 阶段3：技能建立阶段 (350-450分)
+      // 飞鸟主要在蹲下高度，偶尔可跳过
+      width = 22 + _random.nextDouble() * 8;     // 22-30px
+      height = 14 + _random.nextDouble() * 8;    // 14-22px
+      y = groundHeight + 25 + _random.nextDouble() * 15;  // 25-40px 高度
+    } else if (score < 600) {
+      // 阶段4：能力巩固阶段 (450-600分)
+      // 平缓增加难度，巩固蹲下技能
+      width = 23 + _random.nextDouble() * 8;     // 23-31px
+      height = 15 + _random.nextDouble() * 8;    // 15-23px
+      y = groundHeight + 23 + _random.nextDouble() * 19;  // 23-42px 高度
+    } else if (score < 800) {
+      // 阶段5：平衡挑战阶段 (600-800分)
+      // 蹲下和跳过平衡，适中难度
+      width = 24 + _random.nextDouble() * 9;     // 24-33px
+      height = 16 + _random.nextDouble() * 9;    // 16-25px
+      y = groundHeight + 21 + _random.nextDouble() * 24;  // 21-45px 高度
+    } else if (score < 1200) {
+      // 阶段6：高级挑战阶段 (800-1200分)
+      // 增加挑战但保持合理
+      width = 26 + _random.nextDouble() * 10;    // 26-36px
+      height = 17 + _random.nextDouble() * 10;   // 17-27px
+      y = groundHeight + 19 + _random.nextDouble() * 31;  // 19-50px 高度
     } else {
-      // 高分阶段：完全随机化高度，挑战极限反应
-      width = 30 + _random.nextDouble() * 15; // 30-45
-      height = 18 + _random.nextDouble() * 12; // 18-30
-      y = groundHeight + 20 + _random.nextDouble() * 80; // 极大高度范围
+      // 阶段7：大师级挑战 (1200分以上)
+      // 最高难度，但范围控制合理
+      width = 28 + _random.nextDouble() * 12;    // 28-40px
+      height = 18 + _random.nextDouble() * 12;   // 18-30px
+      y = groundHeight + 17 + _random.nextDouble() * 38;  // 17-55px 高度（控制最大范围）
     }
     
     obstacles.add(Obstacle(
@@ -262,13 +293,38 @@ class ObstacleSystem {
   }
   
   /// 更新得分 - 检查哪些障碍物被成功通过
-  int updateScore(double dinoX) {
+  /// 现代化得分系统：基础分 + 难度奖励 + 连击奖励
+  int updateScore(double dinoX, int currentScore, double gameSpeed) {
     int scoreIncrement = 0;
     
     for (Obstacle obstacle in obstacles) {
       if (!obstacle.passed && obstacle.x + obstacle.width < dinoX) {
         obstacle.passed = true;
-        scoreIncrement += 1; // 每通过一个障碍物得1分
+        
+        // 🎯 现代游戏得分设计
+        int baseScore;
+        
+        // 基础得分根据障碍物类型
+        if (obstacle.type == ObstacleType.cactus) {
+          baseScore = 5; // 仙人掌基础5分
+        } else {
+          baseScore = 8; // 飞鸟基础8分（更难）
+        }
+        
+        // 🚀 难度递进奖励（让高分阶段更有价值感）
+        double difficultyMultiplier = 1.0;
+        if (currentScore >= 100) difficultyMultiplier = 1.5;      // 100分后1.5倍
+        if (currentScore >= 300) difficultyMultiplier = 2.0;      // 300分后2倍
+        if (currentScore >= 600) difficultyMultiplier = 2.5;      // 600分后2.5倍
+        if (currentScore >= 1000) difficultyMultiplier = 3.0;     // 1000分后3倍
+        
+        // 🎮 速度奖励（鼓励玩家挑战高速度）
+        double speedBonus = (gameSpeed - 200) / 200 * 0.5 + 1.0; // 速度越快奖励越多
+        speedBonus = speedBonus.clamp(1.0, 2.0); // 限制在1-2倍之间
+        
+        // 计算最终得分
+        int finalScore = (baseScore * difficultyMultiplier * speedBonus).round();
+        scoreIncrement += finalScore;
       }
     }
     
