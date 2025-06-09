@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../games/maze/screens/maze_game_screen.dart';
+import '../games/dino-jump/screens/dino_game_screen.dart';
 
 class GameCollectionHome extends StatefulWidget {
   const GameCollectionHome({super.key});
@@ -179,7 +180,29 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
                   },
                 ),
                 
-                // 即将推出的游戏卡片
+                // 恐龙跳跃游戏卡片
+                _buildGameCard(
+                  title: '恐龙跳跃',
+                  description: '经典的横版跳跃游戏\n躲避障碍物获得高分',
+                  icon: Icons.play_arrow,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF4CAF50),
+                      Color(0xFF66BB6A),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DinoGameScreen(),
+                      ),
+                    );
+                  },
+                ),
+                
                 _buildComingSoonCard(
                   title: '数字拼图',
                   description: '经典的滑动拼图游戏\n锻炼逻辑思维能力',
@@ -190,12 +213,6 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
                   title: '记忆翻牌',
                   description: '测试记忆力的翻牌游戏\n提升专注力和记忆力',
                   icon: Icons.memory,
-                ),
-                
-                _buildComingSoonCard(
-                  title: '俄罗斯方块',
-                  description: '经典的方块消除游戏\n享受经典的游戏乐趣',
-                  icon: Icons.apps,
                 ),
               ],
             ),

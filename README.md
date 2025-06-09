@@ -1,12 +1,15 @@
-# 🎮 Flutter 游戏合集
+# 🎮 不求人，用 AI 开发儿子想玩的游戏合集
 
-一个精心设计的移动游戏合集！包含多种有趣的小游戏，让你在闲暇时光享受游戏的乐趣。
+这个项目的背景：
+
+我儿子今年 5 岁，刚接触游戏，玩过 switch，一点点手游。但是在网上找合适的小游戏时，发现并没有很好找，而且要不是看很多广告，要不是种类太多，还有些不好的游戏在集合页中。所以我干脆用 AI 来开发一些他想玩的游戏好了。
+
 
 ## 🌟 立即体验
 
 不想自己编译？没问题！直接下载最新版本开始游戏：
 
-**👉 [点击这里下载最新版本](https://github.com/MorvanZhou/maze-game/releases)**
+**👉 [点击这里下载最新版本](https://github.com/MorvanZhou/game4son/releases)**
 
 支持 Windows、macOS、iOS、Android 等多个平台！
 
@@ -81,10 +84,10 @@
 ### 快速开始
 ```bash
 # 克隆项目
-git clone https://github.com/MorvanZhou/maze-game.git
+git clone https://github.com/MorvanZhou/game4son.git
 
 # 进入项目目录
-cd maze-game
+cd game4son
 
 # 安装依赖
 flutter pub get
@@ -114,7 +117,7 @@ lib/
 ## 🤝 反馈与支持
 
 遇到问题或有好的建议？欢迎：
-- 提交 [GitHub Issues](https://github.com/MorvanZhou/maze-game/issues)
+- 提交 [GitHub Issues](https://github.com/MorvanZhou/game4son/issues)
 - 给项目点个 ⭐ 星标支持一下
 
 ## 📋 更新日志

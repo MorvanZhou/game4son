@@ -20,7 +20,7 @@ class MazeSoundManager {
 
   /// 开始播放迷宫背景音乐
   Future<void> startBackgroundMusic() async {
-    await _soundManager.startBackgroundMusic('sounds/background.wav', volume: 0.3);
+    await _soundManager.startBackgroundMusic('sounds/maze-bg-loop.wav', volume: 0.3);
   }
 
   Future<void> stopBackgroundMusic() async {

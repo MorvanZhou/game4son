@@ -19,6 +19,7 @@ class CommonSoundManager {
 
   // 公共属性访问器
   bool get soundEnabled => _soundEnabled;
+  bool get effectsEnabled => _soundEnabled;  // 为了兼容性，effectsEnabled指向soundEnabled
   bool get musicEnabled => _musicEnabled;
   bool get isBackgroundMusicPlaying => _isBackgroundMusicPlaying;
 
@@ -27,16 +28,48 @@ class CommonSoundManager {
     _soundEnabled = !_soundEnabled;
   }
 
+  /// 切换音效开关（别名方法，为了兼容性）
+  void toggleEffects() {
+    toggleSound();
+  }
+
   /// 切换背景音乐开关
   void toggleMusic() {
     _musicEnabled = !_musicEnabled;
     if (_musicEnabled) {
-      // 如果有正在播放的背景音乐，恢复播放
+      // 如果开启音乐且有之前播放的背景音乐，恢复播放
       if (_currentBackgroundMusic != null) {
         startBackgroundMusic(_currentBackgroundMusic!);
       }
     } else {
+      // 如果关闭音乐，立即停止当前播放的背景音乐
       stopBackgroundMusic();
+    }
+  }
+
+  /// 全局静音 - 关闭所有音频（背景音乐 + 音效）
+  void muteAll() {
+    _musicEnabled = false;
+    _soundEnabled = false;
+    stopBackgroundMusic(); // 立即停止背景音乐
+  }
+  
+  /// 恢复所有音频 - 开启所有音频（背景音乐 + 音效）
+  void unmuteAll() {
+    _musicEnabled = true;
+    _soundEnabled = true;
+    // 如果有之前播放的背景音乐，恢复播放
+    if (_currentBackgroundMusic != null) {
+      startBackgroundMusic(_currentBackgroundMusic!);
+    }
+  }
+
+  /// 停止所有音效
+  Future<void> stopAllEffects() async {
+    try {
+      await _effectsPlayer.stop();
+    } catch (e) {
+      print('停止音效时出错: $e');
     }
   }
 
@@ -105,7 +138,14 @@ class CommonSoundManager {
     if (!_soundEnabled) return;
     
     try {
-      await _effectsPlayer.play(AssetSource(effectPath), volume: volume);
+      // 使用独立的音效播放器实例，避免重复响应错误
+      final AudioPlayer effectPlayer = AudioPlayer();
+      await effectPlayer.play(AssetSource(effectPath), volume: volume);
+      
+      // 播放完成后释放播放器资源
+      effectPlayer.onPlayerComplete.listen((_) {
+        effectPlayer.dispose();
+      });
     } catch (e) {
       print('播放音效时出错: $e');
     }
@@ -117,7 +157,9 @@ class CommonSoundManager {
     if (!_soundEnabled) return;
     
     try {
+      // 先停止当前音效播放器
       await _effectsPlayer.stop();
+      // 播放新音效
       await _effectsPlayer.play(AssetSource(effectPath), volume: volume);
     } catch (e) {
       print('播放独占音效时出错: $e');
