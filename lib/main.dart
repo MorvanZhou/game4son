@@ -1,33 +1,32 @@
 import 'package:flutter/material.dart';
-import 'screens/game_screen.dart';
+import 'screens/game_collection_home.dart';
 
 void main() {
-  runApp(const MazeGame());
+  runApp(const GameCollection());
 }
 
-class MazeGame extends StatelessWidget {
-  const MazeGame({super.key});
+class GameCollection extends StatelessWidget {
+  const GameCollection({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Cyber Maze',
+      title: '游戏合集',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        // 使用更加中性的主题，不被特定游戏风格影响
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF00FFFF), // Cyan
-          secondary: Color(0xFFFF0080), // Magenta
-          surface: Color(0xFF0A0A0A), // Almost black
-          background: Color(0xFF1A1A1A), // Dark gray
-          onPrimary: Color(0xFF000000),
-          onSecondary: Color(0xFF000000),
-          onSurface: Color(0xFF00FFFF),
-          onBackground: Color(0xFF00FFFF),
+          primary: Color(0xFF6366F1), // 现代紫色
+          secondary: Color(0xFF8B5CF6), // 淡紫色
+          surface: Color(0xFF1F2937), // 深灰色
+          onPrimary: Color(0xFFFFFFFF),
+          onSecondary: Color(0xFFFFFFFF),
+          onSurface: Color(0xFFE5E7EB),
         ),
         useMaterial3: true,
-        fontFamily: 'monospace',
+        fontFamily: 'System', // 使用系统字体，更加通用
       ),
-      home: const GameScreen(),
+      home: const GameCollectionHome(), // 使用游戏集合首页
     );
   }
 }

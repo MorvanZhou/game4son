@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import '../models/game_model.dart';
+import '../models/maze_game_model.dart';
 import '../widgets/maze_widget.dart';
 import '../widgets/congratulations_dialog.dart';
-import '../services/sound_manager.dart';
+import '../services/maze_sound_manager.dart';
 
-class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
+class MazeGameScreen extends StatefulWidget {
+  const MazeGameScreen({super.key});
 
   @override
-  State<GameScreen> createState() => _GameScreenState();
+  State<MazeGameScreen> createState() => _MazeGameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
+class _MazeGameScreenState extends State<MazeGameScreen> with TickerProviderStateMixin {
   late GameModel gameModel;
-  late SoundManager soundManager;
+  late MazeSoundManager soundManager;
   late AnimationController _headerAnimationController;
   late Animation<double> _headerGlowAnimation;
 
@@ -21,7 +21,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     gameModel = GameModel();
-    soundManager = SoundManager();
+    soundManager = MazeSoundManager();
     gameModel.addListener(_onGameModelChanged);
     
     // Start background music

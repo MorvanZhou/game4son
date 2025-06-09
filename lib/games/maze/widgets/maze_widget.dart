@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/maze_generator.dart';
-import '../models/game_model.dart';
-import '../services/sound_manager.dart';
+import '../models/maze_game_model.dart';
+import '../services/maze_sound_manager.dart';
 
 class MazeWidget extends StatefulWidget {
   final GameModel gameModel;
@@ -22,7 +22,7 @@ class MazeWidget extends StatefulWidget {
 
 class _MazeWidgetState extends State<MazeWidget> with TickerProviderStateMixin {
   final FocusNode _focusNode = FocusNode();
-  final SoundManager _soundManager = SoundManager();
+  final MazeSoundManager _soundManager = MazeSoundManager();
   late AnimationController _animationController;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -271,7 +271,7 @@ class _MazeWidgetState extends State<MazeWidget> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 8),
           // Virtual D-pad with improved layout
-          Container(
+          SizedBox(
             width: controlAreaSize,
             height: controlAreaSize,
             child: Stack(

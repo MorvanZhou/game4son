@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'maze_generator.dart';
 
+// 迷宫游戏状态枚举
 enum GameState { playing, paused, levelComplete, gameComplete }
 
 class Player {
