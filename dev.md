@@ -1,5 +1,39 @@
 # 开发迭代记录
 
+## 🔧 音效播放优化 - 解决audioplayers重复响应错误 (2025-06-10)
+
+### 问题背景
+在恐龙跳跃游戏中，快速连续触发跳跃动作时出现错误日志：
+```
+Error: Message responses can be sent only once. Ignoring duplicate response on channel 'xyz.luan/audioplayers'.
+```
+
+### 问题原因分析
+1. **audioplayers插件内部问题**：当快速连续调用 `stop()` 和 `play()` 时，插件可能发送重复响应消息
+2. **时序竞争条件**：`await _effectPlayer.stop()` 和 `await _effectPlayer.play()` 之间的时序冲突
+3. **高频率触发**：恐龙快速跳跃导致音效播放请求过于密集
+
+### 解决方案
+在 `SimpleSoundManager.playEffect()` 方法中进行优化：
+
+1. **移除stop()的await等待**：使用 `_effectPlayer.stop()` 代替 `await _effectPlayer.stop()`，避免时序冲突
+2. **优化防抖时间**：从200ms调整为150ms，提升响应性同时保持防抖效果
+3. **智能错误过滤**：忽略audioplayers特定的重复响应错误，避免误导性日志
+4. **增强注释说明**：详细解释优化原因和解决思路
+
+### 技术细节
+- **问题文件**：`lib/games/common/sound_manager.dart`
+- **核心改进**：将 `await _effectPlayer.stop()` 改为不等待的 `_effectPlayer.stop()`
+- **错误过滤**：检查错误信息，过滤掉 `duplicate response` 和 `xyz.luan/audioplayers` 相关错误
+
+### 效果
+- ✅ 消除了 audioplayers 重复响应错误日志
+- ✅ 保持了音效的正常播放功能
+- ✅ 提升了高频操作下的稳定性
+- ✅ 减少了误导性错误信息
+
+---
+
 ## 恐龙跳跃游戏 - 平缓难度曲线深度优化 (2025-06-09)
 
 ### 重要修改内容

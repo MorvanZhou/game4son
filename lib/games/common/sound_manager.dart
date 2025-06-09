@@ -80,7 +80,7 @@ class SimpleSoundManager {
     }
   }
 
-  /// 播放音效 - 带防抖控制
+  /// 播放音效 - 优化防抖控制，避免audioplayers重复响应错误
   /// [effectPath] 音效文件路径，如 'sounds/jump.wav'
   Future<void> playEffect(String effectPath) async {
     if (!_audioEnabled) return;
@@ -90,29 +90,44 @@ class SimpleSoundManager {
     
     try {
       _isEffectPlaying = true; // 设置播放状态标志，防止重复触发
-      await _effectPlayer.stop(); // 停止当前可能播放的音效
+      
+      // 🔧 优化：使用 unawaited 避免 stop() 和 play() 的时序冲突
+      // 这样可以减少 audioplayers 插件的重复响应错误
+      _effectPlayer.stop(); // 不等待停止完成，直接播放新音效
       await _effectPlayer.play(AssetSource(effectPath)); // 播放新音效
       
-      // 设置防抖延时：播放后延迟200ms再允许下次播放
-      // 这样可以避免快速连续点击导致的音效重叠
-      Future.delayed(const Duration(milliseconds: 200), () {
+      // 设置防抖延时：播放后延迟150ms再允许下次播放
+      // 稍微缩短防抖时间，提升响应性同时保持防抖效果
+      Future.delayed(const Duration(milliseconds: 150), () {
         _isEffectPlaying = false; // 重置播放状态，允许下次音效播放
       });
       
     } catch (e) {
       debugPrint('播放音效错误: $e');
+      
       _isEffectPlaying = false; // 异常时立即重置状态，确保不会卡住
     }
   }
 
-  /// 停止所有音频
+  /// 停止所有音频 - 使用防抖处理避免重复操作
   void _stopAllAudio() {
     try {
-      _backgroundPlayer.stop();
-      _effectPlayer.stop();
-      _isBackgroundPlaying = false;
+      // 🔧 优化：使用非阻塞方式停止音频，避免重复操作冲突
+      // 参考 playEffect 的防抖设计，不等待 stop() 完成
+      _backgroundPlayer.stop(); // 非阻塞停止背景音乐
+      _effectPlayer.stop();     // 非阻塞停止音效
+      
+      Future.delayed(const Duration(milliseconds: 150), () {
+        _isBackgroundPlaying = false;
+        _isEffectPlaying = false; // 重置音效播放状态，防止卡住
+      });      
+      
     } catch (e) {
       debugPrint('停止音频错误: $e');
+      
+      // 异常时确保状态重置，避免状态不一致
+      _isBackgroundPlaying = false;
+      _isEffectPlaying = false;
     }
   }
 
