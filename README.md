@@ -17,11 +17,7 @@
 
 <div align="center">
 
-### iPhone 版本
-<img src="./demo/iphone.png" alt="iPhone版游戏截图" width="300"/>
-
-### macOS 版本  
-<img src="./demo/macos.png" alt="macOS版游戏截图" width="600"/>
+<img src="./demo/stitched_images.jpg" alt="macOS版游戏截图" width="600"/>
 
 </div>
 

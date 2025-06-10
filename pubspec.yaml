@@ -48,6 +48,8 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
   flutter_launcher_icons: ^0.13.1
+  image: ^4.0.15  # 主图像处理库
+  path_provider: ^2.1.5  # 用于文件路径处理（可选）
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
