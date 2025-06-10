@@ -32,10 +32,10 @@ jobs:
                 
       - run: flutter pub get
       - run: flutter build macos --release
-      - run: tar -czvf game4son.macos.tar.gz -C build/macos/Build/Products/Release game4son.app  # 打包为 .tar.gz
+      - run: tar -czvf game4son_macos.tar.gz -C build/macos/Build/Products/Release game4son.app  # 打包为 .tar.gz
       - uses: softprops/action-gh-release@v2
         with:
-          files: game4son.macos.tar.gz
+          files: game4son_macos.tar.gz
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
@@ -50,10 +50,10 @@ jobs:
       - uses: subosito/flutter-action@v2  # 安装 Flutter 环境
       - run: flutter pub get  # 下载项目依赖
       - run: flutter build web --release  # 构建 Web 版本的发布包
-      - run: tar -czvf game4son.web.tar.gz -C build/web .  # 压缩打包为 web.tar.gz
+      - run: tar -czvf game4son_web.tar.gz -C build/web .  # 压缩打包为 web.tar.gz
       - uses: softprops/action-gh-release@v2  # 发布 GitHub Release
         with:
-          files: game4son.web.tar.gz  # 上传文件
+          files: game4son_web.tar.gz  # 上传文件
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}  # 使用 tag 或提交哈希命名
           name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}  # 如果不是 tag，作为草稿
@@ -73,10 +73,10 @@ jobs:
 
       - run: flutter pub get
       - run: flutter build linux --release
-      - run: tar -czvf game4son.linux-x64.tar.gz -C build/linux/x64/release/bundle .  # 压缩为 tar 包
+      - run: tar -czvf game4son_linux-x64.tar.gz -C build/linux/x64/release/bundle .  # 压缩为 tar 包
       - uses: softprops/action-gh-release@v2
         with:
-          files: game4son.linux-x64.tar.gz
+          files: game4son_linux-x64.tar.gz
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
@@ -95,10 +95,10 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build apk --target-platform android-arm64  # 构建 64 位 Android 安装包
-      - run: cp build/app/outputs/flutter-apk/app-release.apk game4son.android.apk
+      - run: cp build/app/outputs/flutter-apk/app-release.apk game4son_android.apk
       - uses: softprops/action-gh-release@v2
         with:
-          files: game4son.android.apk  # 上传 APK 文件
+          files: game4son_android.apk  # 上传 APK 文件
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
@@ -113,10 +113,10 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build windows --release
-      - run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath game4son.windows-x64.zip  # 压缩为 zip 文件
+      - run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath game4son_windows-x64.zip  # 压缩为 zip 文件
       - uses: softprops/action-gh-release@v2
         with:
-          files: game4son.windows-x64.zip
+          files: game4son_windows-x64.zip
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
@@ -131,10 +131,10 @@ jobs:
       - uses: subosito/flutter-action@v2
       - run: flutter pub get
       - run: flutter build ios --release --no-codesign  # 构建 iOS 应用，但不签名（用于测试）
-      - run: tar -czvf game4son.ios.tar.gz -C build/ios/iphoneos Runner.app  # 压缩打包
+      - run: tar -czvf game4son_ios.tar.gz -C build/ios/iphoneos Runner.app  # 压缩打包
       - uses: softprops/action-gh-release@v2
         with:
-          files: game4son.ios.tar.gz
+          files: game4son_ios.tar.gz
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
           draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
