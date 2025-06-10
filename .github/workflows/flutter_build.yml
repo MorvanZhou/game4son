@@ -1,4 +1,4 @@
-name: Build Flutter macOS App
+name: Build Flutter App
 
 on:
   release:
@@ -33,7 +33,10 @@ jobs:
       - run: flutter build macos --release
       - run: tar -czvf game4son_macos.tar.gz -C build/macos/Build/Products/Release game4son.app  # 打包为 .tar.gz
       - run: ls -lh game4son_macos.tar.gz
-      - run: sleep 5 
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v3.9.1
+        with:
+          node-version: 18
       - uses: softprops/action-gh-release@v2
         with:
           files: game4son_macos.tar.gz
@@ -52,7 +55,6 @@ jobs:
       - run: flutter pub get  # 下载项目依赖
       - run: flutter build web --release  # 构建 Web 版本的发布包
       - run: tar -czvf game4son_web.tar.gz -C build/web .  # 压缩打包为 web.tar.gz
-      - run: sleep 5  # 确保文件句柄关闭后再进行下一步
       - uses: softprops/action-gh-release@v2  # 发布 GitHub Release
         with:
           files: game4son_web.tar.gz  # 上传文件
@@ -76,7 +78,6 @@ jobs:
       - run: flutter pub get
       - run: flutter build linux --release
       - run: tar -czvf game4son_linux-x64.tar.gz -C build/linux/x64/release/bundle .  # 压缩为 tar 包
-      - run: sleep 5  # 确保文件句柄关闭后再进行下一步
       - uses: softprops/action-gh-release@v2
         with:
           files: game4son_linux-x64.tar.gz
@@ -99,7 +100,6 @@ jobs:
       - run: flutter pub get
       - run: flutter build apk --target-platform android-arm64  # 构建 64 位 Android 安装包
       - run: cp build/app/outputs/flutter-apk/app-release.apk game4son_android.apk
-      - run: sleep 5  # 确保文件句柄关闭后再进行下一步
       - uses: softprops/action-gh-release@v2
         with:
           files: game4son_android.apk  # 上传 APK 文件
@@ -118,7 +118,6 @@ jobs:
       - run: flutter pub get
       - run: flutter build windows --release
       - run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath game4son_windows-x64.zip  # 压缩为 zip 文件
-      - run: Start-Sleep -Seconds 5  # 等待文件句柄关闭，确保打包完成
       - uses: softprops/action-gh-release@v2
         with:
           files: game4son_windows-x64.zip
@@ -138,7 +137,6 @@ jobs:
       - run: flutter build ios --release --no-codesign  # 构建 iOS 应用，但不签名（用于测试）
       - run: sleep 5  # Ensure the file handle is closed before proceeding
       - run: tar -czvf game4son_ios.tar.gz -C build/ios/iphoneos Runner.app  # 压缩打包
-      - run: sleep 5  # 确保文件句柄关闭后再进行下一步
       - uses: softprops/action-gh-release@v2
         with:
           files: game4son_ios.tar.gz
