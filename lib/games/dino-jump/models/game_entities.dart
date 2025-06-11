@@ -5,6 +5,7 @@ enum DinoGameState {
   ready,     // 准备开始
   playing,   // 游戏中
   gameOver,  // 游戏结束
+  gameOverWithDialog,  // 游戏结束显示对话框状态
 }
 
 // 障碍物类型

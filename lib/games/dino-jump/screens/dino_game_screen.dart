@@ -245,8 +245,7 @@ class _DinoGameScreenState extends State<DinoGameScreen>
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: ListenableBuilder(
+                      borderRadius: BorderRadius.circular(12),                        child: ListenableBuilder(
                         listenable: gameModel,
                         builder: (context, child) {
                           return DinoGameWidget(
@@ -391,7 +390,11 @@ class _DinoGameScreenState extends State<DinoGameScreen>
                   statusColor = const Color(0xFF4CAF50);
                   break;
                 case DinoGameState.gameOver:
-                  statusText = '游戏结束 - 点击屏幕直接开始新游戏';
+                  statusText = '游戏结束 - 点击屏幕查看选项';
+                  statusColor = const Color(0xFFFF5722);
+                  break;
+                case DinoGameState.gameOverWithDialog:
+                  statusText = '选择你的下一步操作';
                   statusColor = const Color(0xFFFF5722);
                   break;
               }

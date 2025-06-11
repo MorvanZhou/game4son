@@ -19,12 +19,81 @@ class DinoGameWidget extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       color: const Color(0xFFF7F7F7), // 浅灰色背景
-      child: CustomPaint(
-        painter: DinoGamePainter(
-          gameModel: gameModel,
-          backgroundAnimation: backgroundAnimation,
+      child: Stack(
+        children: [
+          // 游戏画面
+          CustomPaint(
+            painter: DinoGamePainter(
+              gameModel: gameModel,
+              backgroundAnimation: backgroundAnimation,
+            ),
+            child: Container(), // 空容器用于接收点击事件
+          ),
+          // 游戏结束时的重新开始按钮
+          if (gameModel.gameState == DinoGameState.gameOver || 
+              gameModel.gameState == DinoGameState.gameOverWithDialog)
+            _buildGameOverOverlay(context),
+        ],
+      ),
+    );
+  }
+
+  // 构建游戏结束覆盖层（Widget形式）
+  Widget _buildGameOverOverlay(BuildContext context) {
+    return Container(
+      color: Colors.black.withOpacity(0.7),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // GAME OVER 文字
+            const Text(
+              'GAME OVER',
+              style: TextStyle(
+                fontSize: 36,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // 得分信息
+            Text(
+              '得分: ${gameModel.score}  最高分: ${gameModel.highScore}',
+              style: const TextStyle(
+                fontSize: 18,
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 40),
+            // 重新开始按钮
+            SizedBox(
+              width: 200,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  // 直接调用游戏模型的重新开始方法
+                  gameModel.restartFromDialog();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2196F3),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  '重新开始',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-        child: Container(), // 空容器用于接收点击事件
       ),
     );
   }
@@ -350,9 +419,8 @@ class DinoGamePainter extends CustomPainter {
   void _drawGameStateOverlay(Canvas canvas, Size size) {
     if (gameModel.gameState == DinoGameState.ready) {
       _drawReadyOverlay(canvas, size);
-    } else if (gameModel.gameState == DinoGameState.gameOver) {
-      _drawGameOverOverlay(canvas, size);
     }
+    // 游戏结束状态的覆盖层现在由Widget处理，不在这里绘制
   }
 
   // 绘制准备开始覆盖层
@@ -363,63 +431,19 @@ class DinoGamePainter extends CustomPainter {
     canvas.drawRect(Offset.zero & size, overlayPaint);
 
     // 开始提示文字
-    _drawCenteredText(
-      canvas,
-      size,
-      '↑跳跃 ↓蹲下 | 点击上半屏跳跃，下半屏蹲下',
-      const TextStyle(
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: '↑跳跃 ↓蹲下 | 点击上半屏跳跃，下半屏蹲下', style: const TextStyle(
         fontSize: 20,
         color: Colors.white,
         fontWeight: FontWeight.bold,
-      ),
-    );
-  }
-
-  // 绘制游戏结束覆盖层
-  void _drawGameOverOverlay(Canvas canvas, Size size) {
-    // 半透明背景
-    final Paint overlayPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5);
-    canvas.drawRect(Offset.zero & size, overlayPaint);
-
-    // 游戏结束文字
-    _drawCenteredText(
-      canvas,
-      size,
-      'GAME OVER',
-      const TextStyle(
-        fontSize: 32,
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
-      offsetY: -30,
-    );
-
-    // 重新开始提示
-    _drawCenteredText(
-      canvas,
-      size,
-      '↑跳跃 ↓蹲下 | 点击重新开始',
-      const TextStyle(
-        fontSize: 18,
-        color: Colors.white70,
-        fontWeight: FontWeight.w500,
-      ),
-      offsetY: 10,
-    );
-  }
-
-  // 绘制居中文字
-  void _drawCenteredText(Canvas canvas, Size size, String text, TextStyle style, {double offsetY = 0}) {
-    final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: text, style: style),
+      ),),
       textDirection: TextDirection.ltr,
     );
     textPainter.layout();
 
     final Offset offset = Offset(
       (size.width - textPainter.width) / 2,
-      (size.height - textPainter.height) / 2 + offsetY,
+      (size.height - textPainter.height) / 2 + 0,
     );
 
     textPainter.paint(canvas, offset);

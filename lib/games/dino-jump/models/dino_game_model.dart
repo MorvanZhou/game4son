@@ -60,10 +60,17 @@ class DinoGameModel extends ChangeNotifier {
       return;
     }
     
-    // 如果游戏结束，点击重新开始游戏
+    // 如果游戏结束但还没显示对话框，显示对话框
     if (_gameState == DinoGameState.gameOver) {
-      restart();
+      _gameState = DinoGameState.gameOverWithDialog;
+      notifyListeners();
       return;
+    }
+    
+    // 如果已经显示了游戏结束对话框，则不处理点击事件
+    // 只能通过重玩按钮重新开始
+    if (_gameState == DinoGameState.gameOverWithDialog) {
+      return; // 不做任何处理，防止意外重新开始
     }
     
     // 游戏进行中，尝试跳跃
@@ -90,6 +97,11 @@ class DinoGameModel extends ChangeNotifier {
       // 播放蹲下音效（如果有的话）
       // _soundManager.playDuckSound();
     }
+    // 如果游戏结束且还没显示对话框，显示对话框
+    else if (_gameState == DinoGameState.gameOver) {
+      _gameState = DinoGameState.gameOverWithDialog;
+      notifyListeners();
+    }
   }
   
   /// 停止蹲下
@@ -100,6 +112,11 @@ class DinoGameModel extends ChangeNotifier {
   /// 重新开始游戏
   void restart() {
     startGame();
+  }
+
+  /// 从游戏结束对话框重新开始游戏
+  void restartFromDialog() {
+    startGame(); // 重新开始游戏逻辑相同
   }
 
   /// 游戏主循环更新
