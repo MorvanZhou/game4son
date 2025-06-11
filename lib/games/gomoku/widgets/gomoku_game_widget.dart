@@ -28,6 +28,10 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
   // 最新下棋的动画位置
   int? _animatingRow;
   int? _animatingCol;
+  
+  // 鼠标悬停位置追踪 - 用于显示落子预览效果
+  int? _hoverRow;
+  int? _hoverCol;
 
   @override
   void initState() {
@@ -86,7 +90,7 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -94,21 +98,30 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: CustomPaint(
-            painter: GomokuBoardPainter(
-              gameModel: widget.gameModel,
-              pieceAnimation: _pieceScaleAnimation,
-              animatingRow: _animatingRow,
-              animatingCol: _animatingCol,
-            ),
-            child: GestureDetector(
-              onTapDown: _handleTapDown,
-              // 确保手势检测器能接收到事件
-              behavior: HitTestBehavior.opaque,
-              child: SizedBox(
-                width: double.infinity,
-                height: double.infinity,
-              ), // 填满整个区域以接收点击事件
+          child: MouseRegion(
+            // 添加鼠标区域检测，提供更好的鼠标悬停体验
+            onHover: _handleMouseHover,
+            onExit: _handleMouseExit,
+            child: CustomPaint(
+              painter: GomokuBoardPainter(
+                gameModel: widget.gameModel,
+                pieceAnimation: _pieceScaleAnimation,
+                animatingRow: _animatingRow,
+                animatingCol: _animatingCol,
+                hoverRow: _hoverRow, // 传递鼠标悬停行位置
+                hoverCol: _hoverCol, // 传递鼠标悬停列位置
+              ),
+              child: GestureDetector(
+                onTapDown: _handleTapDown,
+                onPanUpdate: _handlePanUpdate, // 添加鼠标移动处理
+                onPanEnd: _handlePanEnd, // 添加鼠标离开处理
+                // 确保手势检测器能接收到事件
+                behavior: HitTestBehavior.opaque,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                ), // 填满整个区域以接收点击事件
+              ),
             ),
           ),
         ),
@@ -119,7 +132,7 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
   /// 处理棋盘点击事件
   void _handleTapDown(TapDownDetails details) {
     
-    // 只在游戏进行中且轮到玩家时响应
+    // 只在游戏进行中且轮到玩家时响应，分析模式下禁用交互
     if (widget.gameModel.gameState != GomokuGameState.playing) {
       return;
     }
@@ -155,6 +168,116 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
       
     }
   }
+
+  /// 处理鼠标拖拽移动事件 - 用于显示悬停效果
+  void _handlePanUpdate(DragUpdateDetails details) {
+    // 只在游戏进行中且轮到玩家时显示悬停效果，分析模式下禁用
+    if (widget.gameModel.gameState != GomokuGameState.playing ||
+        !widget.gameModel.isPlayerTurn) {
+      return;
+    }
+
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) {
+      return;
+    }
+
+    final size = renderBox.size;
+    final localPosition = details.localPosition;
+
+    // 计算鼠标位置对应的棋盘坐标
+    final cellSize = size.width / GomokuGameModel.boardSize;
+    final row = (localPosition.dy / cellSize).floor();
+    final col = (localPosition.dx / cellSize).floor();
+
+    // 确保坐标在有效范围内且位置为空
+    if (row >= 0 && row < GomokuGameModel.boardSize &&
+        col >= 0 && col < GomokuGameModel.boardSize &&
+        widget.gameModel.board[row][col] == PieceType.none) {
+      
+      // 只在悬停位置改变时更新状态
+      if (_hoverRow != row || _hoverCol != col) {
+        setState(() {
+          _hoverRow = row;
+          _hoverCol = col;
+        });
+      }
+    } else {
+      // 鼠标移出有效区域，清除悬停状态
+      if (_hoverRow != null || _hoverCol != null) {
+        setState(() {
+          _hoverRow = null;
+          _hoverCol = null;
+        });
+      }
+    }
+  }
+
+  /// 处理鼠标拖拽结束事件 - 清除悬停效果
+  void _handlePanEnd(DragEndDetails details) {
+    // 清除悬停状态
+    if (_hoverRow != null || _hoverCol != null) {
+      setState(() {
+        _hoverRow = null;
+        _hoverCol = null;
+      });
+    }
+  }
+
+  /// 处理鼠标悬停事件 - 用于桌面端更精确的悬停检测
+  void _handleMouseHover(PointerEvent event) {
+    // 只在游戏进行中且轮到玩家时显示悬停效果，分析模式下禁用
+    if (widget.gameModel.gameState != GomokuGameState.playing ||
+        !widget.gameModel.isPlayerTurn) {
+      return;
+    }
+
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) {
+      return;
+    }
+
+    final size = renderBox.size;
+    final localPosition = event.localPosition;
+
+    // 计算鼠标位置对应的棋盘坐标
+    final cellSize = size.width / GomokuGameModel.boardSize;
+    final row = (localPosition.dy / cellSize).floor();
+    final col = (localPosition.dx / cellSize).floor();
+
+    // 确保坐标在有效范围内且位置为空
+    if (row >= 0 && row < GomokuGameModel.boardSize &&
+        col >= 0 && col < GomokuGameModel.boardSize &&
+        widget.gameModel.board[row][col] == PieceType.none) {
+      
+      // 只在悬停位置改变时更新状态
+      if (_hoverRow != row || _hoverCol != col) {
+        setState(() {
+          _hoverRow = row;
+          _hoverCol = col;
+        });
+      }
+    } else {
+      // 鼠标移出有效区域，清除悬停状态
+      if (_hoverRow != null || _hoverCol != null) {
+        setState(() {
+          _hoverRow = null;
+          _hoverCol = null;
+        });
+      }
+    }
+  }
+
+  /// 处理鼠标离开事件 - 清除悬停效果
+  void _handleMouseExit(PointerEvent event) {
+    // 清除悬停状态
+    if (_hoverRow != null || _hoverCol != null) {
+      setState(() {
+        _hoverRow = null;
+        _hoverCol = null;
+      });
+    }
+  }
 }
 
 /// 五子棋棋盘绘制器
@@ -165,12 +288,16 @@ class GomokuBoardPainter extends CustomPainter {
   final Animation<double> pieceAnimation;
   final int? animatingRow;
   final int? animatingCol;
+  final int? hoverRow; // 鼠标悬停行位置
+  final int? hoverCol; // 鼠标悬停列位置
 
   GomokuBoardPainter({
     required this.gameModel,
     required this.pieceAnimation,
     this.animatingRow,
     this.animatingCol,
+    this.hoverRow,
+    this.hoverCol,
   }) : super(repaint: pieceAnimation);
 
   @override
@@ -179,6 +306,7 @@ class GomokuBoardPainter extends CustomPainter {
     
     _drawBoard(canvas, size, cellSize);
     _drawPieces(canvas, cellSize);
+    _drawHoverEffect(canvas, cellSize); // 绘制鼠标悬停效果
   }
 
   /// 绘制棋盘网格和装饰
@@ -297,7 +425,7 @@ class GomokuBoardPainter extends CustomPainter {
       
       // 绘制棋子阴影
       final Paint shadowPaint = Paint()
-        ..color = Colors.black.withOpacity(0.3)
+        ..color = Colors.black.withValues(alpha: 0.3)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
       
       canvas.drawCircle(
@@ -315,7 +443,7 @@ class GomokuBoardPainter extends CustomPainter {
       
       // 绘制高光
       final Paint highlightPaint = Paint()
-        ..color = Colors.white.withOpacity(0.3);
+        ..color = Colors.white.withValues(alpha: 0.3);
       
       canvas.drawCircle(
         Offset(centerX - radius * 0.3, centerY - radius * 0.3),
@@ -338,7 +466,7 @@ class GomokuBoardPainter extends CustomPainter {
       
       // 绘制棋子阴影
       final Paint shadowPaint = Paint()
-        ..color = Colors.black.withOpacity(0.3)
+        ..color = Colors.black.withValues(alpha: 0.3)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
       
       canvas.drawCircle(
@@ -384,10 +512,59 @@ class GomokuBoardPainter extends CustomPainter {
     );
   }
 
+  /// 绘制鼠标悬停效果 - 显示绿色圆圈提示可落子位置
+  void _drawHoverEffect(Canvas canvas, double cellSize) {
+    // 只有在有悬停位置且游戏进行中时才绘制
+    if (hoverRow == null || hoverCol == null) return;
+    if (gameModel.gameState != GomokuGameState.playing) return;
+    if (!gameModel.isPlayerTurn) return;
+
+    final centerX = hoverCol! * cellSize + cellSize / 2;
+    final centerY = hoverRow! * cellSize + cellSize / 2;
+    final radius = cellSize * 0.35;
+
+    // 绘制半透明的绿色圆圈作为悬停提示
+    final Paint hoverPaint = Paint()
+      ..color = const Color(0xFF4CAF50).withValues(alpha: 0.4) // 绿色半透明
+      ..style = PaintingStyle.fill;
+
+    // 绘制填充圆圈
+    canvas.drawCircle(
+      Offset(centerX, centerY),
+      radius,
+      hoverPaint,
+    );
+
+    // 绘制边框圆圈，提供更明显的视觉提示
+    final Paint borderPaint = Paint()
+      ..color = const Color(0xFF4CAF50).withValues(alpha: 0.8) // 绿色边框
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+
+    canvas.drawCircle(
+      Offset(centerX, centerY),
+      radius,
+      borderPaint,
+    );
+
+    // 添加内部小圆圈，增强视觉效果
+    final Paint innerPaint = Paint()
+      ..color = const Color(0xFF4CAF50).withValues(alpha: 0.6)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(
+      Offset(centerX, centerY),
+      radius * 0.3,
+      innerPaint,
+    );
+  }
+
   @override
   bool shouldRepaint(GomokuBoardPainter oldDelegate) {
     return oldDelegate.gameModel != gameModel ||
            oldDelegate.animatingRow != animatingRow ||
-           oldDelegate.animatingCol != animatingCol;
+           oldDelegate.animatingCol != animatingCol ||
+           oldDelegate.hoverRow != hoverRow ||        // 悬停行位置变化时需要重绘
+           oldDelegate.hoverCol != hoverCol;         // 悬停列位置变化时需要重绘
   }
 }

@@ -138,7 +138,7 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
         // 开始游戏按钮 - 根据当前设置开始新游戏
         IconButton(
           onPressed:
-              gameModel.gameState == GomokuGameState.playing
+              (gameModel.gameState == GomokuGameState.playing)
                   ? null // 游戏进行中时禁用
                   : () {
                     gameModel.startNewGame(); // 开始新游戏
@@ -442,7 +442,7 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
                     child: TextButton(
                       onPressed: () {
                         Navigator.of(context).pop();
-                        gameModel.resetGame();
+                        gameModel.enterAnalysisMode(); // 进入分析模式，保留棋局
                       },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -452,7 +452,7 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
                         backgroundColor: Colors.white.withOpacity(0.1),
                       ),
                       child: const Text(
-                        '返回设置',
+                        '查看复盘',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,

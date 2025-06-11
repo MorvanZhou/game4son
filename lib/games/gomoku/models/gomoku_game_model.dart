@@ -7,7 +7,8 @@ enum GomokuGameState {
   playing,      // 游戏进行中
   playerWin,    // 玩家获胜
   aiWin,        // AI获胜
-  draw          // 平局
+  draw,         // 平局
+  analyzing     // 分析模式 - 游戏结束后查看棋局
 }
 
 /// 棋子类型
@@ -127,6 +128,12 @@ class GomokuGameModel extends ChangeNotifier {
     _gameState = GomokuGameState.ready;
     _initializeBoard();
     _isPlayerTurn = _playerGoesFirst;
+    notifyListeners();
+  }
+  
+  /// 进入分析模式 - 保留当前棋局状态供分析
+  void enterAnalysisMode() {
+    _gameState = GomokuGameState.analyzing;
     notifyListeners();
   }
   
@@ -328,6 +335,8 @@ class GomokuGameModel extends ChangeNotifier {
         return 'AI获胜，再接再厉！';
       case GomokuGameState.draw:
         return '平局！棋力相当！';
+      case GomokuGameState.analyzing:
+        return '分析模式 - 复盘当前棋局';
     }
   }
   
