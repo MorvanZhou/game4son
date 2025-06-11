@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../games/maze/screens/maze_game_screen.dart';
-import '../games/dino-jump/screens/dino_game_screen.dart';
+import '../games/dino-jump/screens/chrome_dino_game_screen.dart';
 import '../games/gomoku/screens/gomoku_game_screen.dart';
 
 class GameCollectionHome extends StatefulWidget {
@@ -171,7 +171,7 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
                 
                 // 恐龙跳跃游戏卡片
                 _buildGameCard(
-                  title: '恐龙跳跃',
+                  title: '恐龙跳跳',
                   icon: Icons.directions_run,
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
@@ -185,7 +185,7 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const DinoGameScreen(),
+                        builder: (context) => const ChromeDinoGameScreen(),
                       ),
                     );
                   },
