@@ -241,64 +241,81 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
     required Gradient gradient,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: gradient,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 根据可用空间动态计算元素大小
+        final cardSize = constraints.maxWidth;
+        final iconSize = (cardSize * 0.2).clamp(24.0, 45.0); // 图标大小为卡片宽度的20%，限制在24-45px之间
+        final iconPadding = (cardSize * 0.08).clamp(6.0, 12.0); // 图标内边距
+        final spacing = (cardSize * 0.06).clamp(4.0, 8.0); // 元素间距
+        final fontSize = (cardSize * 0.12).clamp(10.0, 14.0); // 字体大小
+        final cardPadding = (cardSize * 0.08).clamp(6.0, 12.0); // 卡片内边距
+        
+        return GestureDetector(
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: gradient,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // 游戏图标
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 45,
-                      color: Colors.white,
-                    ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: onTap,
+                child: Padding(
+                  padding: EdgeInsets.all(cardPadding),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min, // 重要：使用最小尺寸
+                    children: [
+                      // 游戏图标 - 自适应大小
+                      Flexible(
+                        child: Container(
+                          padding: EdgeInsets.all(iconPadding),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            icon,
+                            size: iconSize,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      
+                      SizedBox(height: spacing),
+                      
+                      // 游戏标题 - 自适应字体大小
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: fontSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  // 游戏标题
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -306,81 +323,104 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
     required String title,
     required IconData icon,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.grey.withOpacity(0.3),
-            Colors.grey.withOpacity(0.1),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 游戏图标
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                icon,
-                size: 32,
-                color: Colors.white.withOpacity(0.6),
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 根据可用空间动态计算元素大小
+        final cardSize = constraints.maxWidth;
+        final iconSize = (cardSize * 0.28).clamp(20.0, 32.0); // 即将推出的卡片图标稍小
+        final iconPadding = (cardSize * 0.08).clamp(6.0, 12.0);
+        final spacing = (cardSize * 0.06).clamp(3.0, 8.0);
+        final fontSize = (cardSize * 0.12).clamp(10.0, 14.0);
+        final cardPadding = (cardSize * 0.08).clamp(6.0, 12.0);
+        final tagFontSize = (cardSize * 0.08).clamp(8.0, 10.0);
+        
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.grey.withOpacity(0.3),
+                Colors.grey.withOpacity(0.1),
+              ],
             ),
-            
-            const SizedBox(height: 8),
-            
-            // 游戏标题
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.white.withOpacity(0.6),
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1,
             ),
-            
-            const SizedBox(height: 4),
-            
-            // 即将推出标签
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
-                  width: 1,
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(cardPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // 使用最小尺寸
+              children: [
+                // 游戏图标 - 自适应大小
+                Flexible(
+                  child: Container(
+                    padding: EdgeInsets.all(iconPadding),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: iconSize,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
+                  ),
                 ),
-              ),
-              child: Text(
-                '即将推出',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.white.withOpacity(0.7),
-                  fontWeight: FontWeight.w500,
+                
+                SizedBox(height: spacing),
+                
+                // 游戏标题 - 自适应字体
+                Flexible(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white.withOpacity(0.6),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
+                
+                SizedBox(height: spacing * 0.5),
+                
+                // 即将推出标签 - 自适应大小
+                Flexible(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: cardPadding * 0.7, 
+                      vertical: cardPadding * 0.3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      '即将推出',
+                      style: TextStyle(
+                        fontSize: tagFontSize,
+                        color: Colors.white.withOpacity(0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

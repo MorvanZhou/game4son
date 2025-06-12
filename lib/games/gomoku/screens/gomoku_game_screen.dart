@@ -188,13 +188,14 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
   }
 
   /// 构建游戏设置栏（包含设置和状态信息）
+  /// 使用响应式布局，在小屏幕上自动换行避免溢出
   Widget _buildGameSettingsBar() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 8,
-      ), // 减少垂直内边距
+      ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -208,102 +209,185 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
           ),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // 游戏状态
-          Text(
-            gameModel.getGameStateText(),
-            style: TextStyle(
-              fontSize: 14, // 进一步缩小字体以节省空间
-              fontWeight: FontWeight.bold,
-              color: _getGameStateColor(),
-            ),
-          ),
-
-          // 比分显示
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 3,
-            ), // 进一步减少内边距
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '${gameModel.playerWins} : ${gameModel.aiWins}',
-              style: const TextStyle(
-                fontSize: 12, // 缩小字体
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-
-          // 先后手选择 - 紧凑布局
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '先手：',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.white.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(width: 4),
-              _buildQuickToggle(
-                text: '我',
-                isSelected: gameModel.playerGoesFirst,
-                onTap: () => gameModel.setPlayerGoesFirst(true),
-              ),
-              const SizedBox(width: 2),
-              _buildQuickToggle(
-                text: 'AI',
-                isSelected: !gameModel.playerGoesFirst,
-                onTap: () => gameModel.setPlayerGoesFirst(false),
-              ),
-            ],
-          ),
-
-          // 难度选择 - 紧凑布局
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '难度：',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.white.withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(width: 4),
-              _buildQuickToggle(
-                text: '易',
-                isSelected: gameModel.difficulty == DifficultyLevel.easy,
-                onTap: () => gameModel.setDifficulty(DifficultyLevel.easy),
-              ),
-              const SizedBox(width: 2),
-              _buildQuickToggle(
-                text: '中',
-                isSelected: gameModel.difficulty == DifficultyLevel.medium,
-                onTap: () => gameModel.setDifficulty(DifficultyLevel.medium),
-              ),
-              const SizedBox(width: 2),
-              _buildQuickToggle(
-                text: '难',
-                isSelected: gameModel.difficulty == DifficultyLevel.hard,
-                onTap: () => gameModel.setDifficulty(DifficultyLevel.hard),
-              ),
-            ],
-          ),
-
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // 判断屏幕宽度，决定使用单行还是多行布局
+          final isNarrowScreen = constraints.maxWidth < 400;
           
-        ],
+          if (isNarrowScreen) {
+            // 窄屏幕：使用两行布局
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 第一行：游戏状态和比分
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // 游戏状态
+                    Flexible(
+                      child: Text(
+                        gameModel.getGameStateText(),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: _getGameStateColor(),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    
+                    // 比分显示
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${gameModel.playerWins} : ${gameModel.aiWins}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 6), // 行间距
+                
+                // 第二行：设置选项
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // 先后手选择
+                    _buildCompactSettingsGroup(
+                      label: '先手',
+                      options: [
+                        ('我', gameModel.playerGoesFirst, () => gameModel.setPlayerGoesFirst(true)),
+                        ('AI', !gameModel.playerGoesFirst, () => gameModel.setPlayerGoesFirst(false)),
+                      ],
+                    ),
+                    
+                    // 难度选择
+                    _buildCompactSettingsGroup(
+                      label: '难度',
+                      options: [
+                        ('易', gameModel.difficulty == DifficultyLevel.easy, () => gameModel.setDifficulty(DifficultyLevel.easy)),
+                        ('中', gameModel.difficulty == DifficultyLevel.medium, () => gameModel.setDifficulty(DifficultyLevel.medium)),
+                        ('难', gameModel.difficulty == DifficultyLevel.hard, () => gameModel.setDifficulty(DifficultyLevel.hard)),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            );
+          } else {
+            // 宽屏幕：使用单行布局
+            return Row(
+              children: [
+                // 游戏状态
+                Flexible(
+                  flex: 2,
+                  child: Text(
+                    gameModel.getGameStateText(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: _getGameStateColor(),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // 比分显示
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${gameModel.playerWins} : ${gameModel.aiWins}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // 先后手选择
+                _buildCompactSettingsGroup(
+                  label: '先手',
+                  options: [
+                    ('我', gameModel.playerGoesFirst, () => gameModel.setPlayerGoesFirst(true)),
+                    ('AI', !gameModel.playerGoesFirst, () => gameModel.setPlayerGoesFirst(false)),
+                  ],
+                ),
+
+                const SizedBox(width: 12),
+
+                // 难度选择
+                _buildCompactSettingsGroup(
+                  label: '难度',
+                  options: [
+                    ('易', gameModel.difficulty == DifficultyLevel.easy, () => gameModel.setDifficulty(DifficultyLevel.easy)),
+                    ('中', gameModel.difficulty == DifficultyLevel.medium, () => gameModel.setDifficulty(DifficultyLevel.medium)),
+                    ('难', gameModel.difficulty == DifficultyLevel.hard, () => gameModel.setDifficulty(DifficultyLevel.hard)),
+                  ],
+                ),
+              ],
+            );
+          }
+        },
       ),
+    );
+  }
+
+  /// 构建紧凑的设置组件，减少代码重复
+  Widget _buildCompactSettingsGroup({
+    required String label,
+    required List<(String, bool, VoidCallback)> options,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label：',
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.white.withOpacity(0.7),
+          ),
+        ),
+        const SizedBox(width: 4),
+        ...options.map((option) {
+          final (text, isSelected, onTap) = option;
+          return Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: _buildQuickToggle(
+              text: text,
+              isSelected: isSelected,
+              onTap: onTap,
+            ),
+          );
+        }).toList(),
+      ],
     );
   }
 

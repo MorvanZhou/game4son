@@ -1,13 +1,12 @@
 import 'package:flame/components.dart';
+import 'dart:math' as math;
 
-/// 地面轨道组件 - 参考Python版本的background函数逻辑
+/// 地面轨道组件 - 参考Python版本的background函数逻辑，支持自适应游戏尺寸
 class GroundTrack extends Component {
-  // 屏幕常量
-  static const double screenWidth = 1100.0;
-  static const double yPosBg = 380.0; // 参考Python版本的y_pos_bg = 380
-  
   // 背景位置 - 参考Python版本的x_pos_bg
   double xPosBg = 0.0;
+  late double yPosBg; // 自适应Y位置
+  late double gameWidth; // 自适应游戏宽度
   
   // 地面轨道精灵组件
   late SpriteComponent track1;
@@ -15,6 +14,13 @@ class GroundTrack extends Component {
 
   @override
   Future<void> onLoad() async {
+    // 获取游戏尺寸（从父组件获取）
+    gameWidth = (parent as dynamic).gameWidth ?? 1100.0;
+    final gameHeight = (parent as dynamic).gameHeight ?? 600.0;
+    
+    // 计算地面Y位置 - 距离底部约1/3的位置
+    yPosBg = gameHeight * 0.63; // 大约在屏幕的2/3位置
+    
     // 加载地面轨道精灵图 - 参考Python版本的BG图片
     final trackSprite = await Sprite.load('dino-jump.Track.png');
     
@@ -34,8 +40,8 @@ class GroundTrack extends Component {
     );
     add(track2);
     
-    // 设置轨道大小以覆盖整个屏幕宽度
-    final trackWidth = trackSprite.srcSize.x;
+    // 设置轨道大小，让轨道能够覆盖屏幕宽度
+    final trackWidth = math.max(trackSprite.srcSize.x, gameWidth / 2);
     track1.size = Vector2(trackWidth, trackSprite.srcSize.y);
     track2.size = Vector2(trackWidth, trackSprite.srcSize.y);
   }
@@ -63,5 +69,20 @@ class GroundTrack extends Component {
     xPosBg = 0.0;
     track1.position.x = xPosBg;
     track2.position.x = track1.size.x + xPosBg;
+  }
+
+  /// 更新游戏尺寸 - 当游戏尺寸改变时调用
+  void updateGameSize(double newGameWidth, double newGameHeight) {
+    gameWidth = newGameWidth;
+    yPosBg = newGameHeight * 0.63;
+    
+    // 更新轨道位置和大小
+    track1.position.y = yPosBg;
+    track2.position.y = yPosBg;
+    
+    // 更新轨道宽度
+    final trackWidth = math.max(track1.sprite!.srcSize.x, gameWidth / 2);
+    track1.size = Vector2(trackWidth, track1.sprite!.srcSize.y);
+    track2.size = Vector2(trackWidth, track2.sprite!.srcSize.y);
   }
 }

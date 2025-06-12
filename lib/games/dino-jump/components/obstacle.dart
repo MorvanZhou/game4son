@@ -2,11 +2,12 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-/// 障碍物基类 - 参考Python版本的Obstacle类
+/// 障碍物基类 - 参考Python版本的Obstacle类，支持自适应游戏尺寸
 abstract class Obstacle extends SpriteComponent {
-  // 屏幕常量
-  static const double screenWidth = 1100.0;
-  static const double groundY = 380.0; // 地面Y坐标
+  // 自适应游戏尺寸
+  late double gameWidth;
+  late double gameHeight;
+  late double groundY; // 动态地面Y坐标
   
   // 障碍物类型
   int type = 0;
@@ -15,22 +16,27 @@ abstract class Obstacle extends SpriteComponent {
   late Rect obstacleRect;
 
   Obstacle() {
-    // 设置初始位置为屏幕右侧地面上
-    position = Vector2(screenWidth, groundY);
+    // 初始位置会在onLoad中设置
     anchor = Anchor.bottomLeft;
+  }
+
+  @override
+  Future<void> onLoad() async {
+    // 获取游戏尺寸（从父组件获取）
+    gameWidth = (parent as dynamic).gameWidth ?? 1100.0;
+    gameHeight = (parent as dynamic).gameHeight ?? 600.0;
+    groundY = gameHeight * 0.63; // 与地面轨道保持一致
+    
+    // 设置初始位置为屏幕右侧地面上
+    position = Vector2(gameWidth, groundY);
+    
+    await super.onLoad();
   }
 
   /// 更新移动 - 参考Python版本的update方法
   void updateMovement(int gameSpeed) {
-    // 记录更新前的位置
-    final oldPosition = Vector2.copy(position);
-    
     // 参考Python版本: self.rect.x -= game_speed
     position.x -= gameSpeed.toDouble();
-    
-    // 添加调试信息
-    print('障碍物移动: ${oldPosition} -> ${position}, gameSpeed=${gameSpeed}');
-    
     _updateCollisionRect();
   }
 
@@ -40,13 +46,17 @@ abstract class Obstacle extends SpriteComponent {
     return position.x < -size.x;
   }
 
-  /// 更新碰撞矩形
+  /// 更新碰撞矩形 - 优化碰撞体验，让边界比图片稍小
   void _updateCollisionRect() {
+    // 障碍物碰撞矩形收缩参数 - 让碰撞检测更宽松
+    const double shrinkX = 6.0; // 左右各收缩6像素
+    const double shrinkY = 4.0; // 上下各收缩4像素
+    
     obstacleRect = Rect.fromLTWH(
-      position.x,
-      position.y - size.y, // 因为anchor是bottomLeft，所以要减去高度
-      size.x,
-      size.y,
+      position.x + shrinkX/2, // X坐标向右偏移收缩量的一半
+      position.y - size.y + shrinkY/2, // Y坐标向下偏移收缩量的一半
+      size.x - shrinkX, // 宽度减少收缩量
+      size.y - shrinkY, // 高度减少收缩量
     );
   }
 
@@ -62,6 +72,8 @@ class SmallCactus extends Obstacle {
 
   @override
   Future<void> onLoad() async {
+    await super.onLoad(); // 调用父类onLoad获取游戏尺寸
+    
     // 随机选择小仙人掌类型 - 参考Python版本: self.type = random.randint(0, 2)
     type = random.nextInt(3); // 0, 1, 2
     
@@ -74,31 +86,24 @@ class SmallCactus extends Obstacle {
     
     sprite = await Sprite.load(spriteNames[type]);
     
-    // 设置大小 - 根据图片调整大小
-    size = Vector2(34, 70);
-    
-    // 不要重新设置位置，使用父类构造函数中设置的初始位置
-    _updateCollisionRect();
-    
-    // 添加调试信息
-    print('小仙人掌加载完成: position=${position}, size=${size}, sprite loaded: ${sprite != null}');
-  }
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    // 添加调试渲染 - 绘制一个红色矩形来确保组件在正确位置
-    if (sprite != null) {
-      final debugPaint = Paint()
-        ..color = const Color(0x80FF0000) // 半透明红色
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0;
-      
-      canvas.drawRect(
-        Rect.fromLTWH(0, -size.y, size.x, size.y),
-        debugPaint,
-      );
+    // 根据实际图片尺寸设置大小
+    switch (type) {
+      case 0: // SmallCactus1: 40x71
+        size = Vector2(40, 71);
+        break;
+      case 1: // SmallCactus2: 68x71  
+        size = Vector2(68, 71);
+        break;
+      case 2: // SmallCactus3: 105x71
+        size = Vector2(105, 71);
+        break;
+      default:
+        size = Vector2(40, 71); // 默认使用第一个尺寸
+        break;
     }
+    
+    // 更新碰撞矩形
+    _updateCollisionRect();
   }
 }
 
@@ -108,6 +113,8 @@ class LargeCactus extends Obstacle {
 
   @override
   Future<void> onLoad() async {
+    await super.onLoad(); // 调用父类onLoad获取游戏尺寸
+    
     // 随机选择大仙人掌类型 - 参考Python版本: self.type = random.randint(0, 2)
     type = random.nextInt(3); // 0, 1, 2
     
@@ -120,72 +127,23 @@ class LargeCactus extends Obstacle {
     
     sprite = await Sprite.load(spriteNames[type]);
     
-    // 设置大小 - 根据图片调整大小
-    size = Vector2(50, 100);
-    
-    // 不要重新设置位置，使用父类构造函数中设置的初始位置
-    _updateCollisionRect();
-    
-    // 添加调试信息
-    print('大仙人掌加载完成: position=${position}, size=${size}');
-  }
-}
-
-/// 飞鸟障碍物 - 参考Python版本的Bird类
-class BirdObstacle extends Obstacle {
-  // 参考Python版本的BIRD_HEIGHTS = [250, 290, 320]
-  static const List<double> birdHeights = [250.0, 290.0, 320.0];
-  
-  final math.Random random = math.Random();
-  int animationIndex = 0; // 参考Python版本的self.index = 0
-  
-  // 鸟类动画精灵
-  late List<Sprite> birdSprites;
-
-  BirdObstacle() : super() {
-    // 为飞鸟设置特殊的Y位置（在空中）
-    final selectedHeight = birdHeights[random.nextInt(birdHeights.length)];
-    position = Vector2(Obstacle.screenWidth, selectedHeight);
-  }
-
-  @override
-  Future<void> onLoad() async {
-    // 加载鸟类精灵图 - 参考Python版本的BIRD数组
-    birdSprites = [
-      await Sprite.load('dino-jump.Bird1.png'),
-      await Sprite.load('dino-jump.Bird2.png'),
-    ];
-    
-    // 设置初始精灵
-    sprite = birdSprites[0];
-    
-    // 设置大小
-    size = Vector2(60, 50); // 根据图片调整大小
-    
-    // 不要重新设置位置，使用构造函数中设置的位置
-    _updateCollisionRect();
-    
-    // 添加调试信息
-    print('飞鸟加载完成: position=${position}, size=${size}');
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    
-    // 鸟类飞行动画 - 参考Python版本的draw方法动画逻辑
-    _updateBirdAnimation();
-  }
-
-  /// 更新鸟类动画 - 参考Python版本的Bird.draw方法
-  void _updateBirdAnimation() {
-    // 参考Python版本: if self.index >= 9: self.index = 0
-    if (animationIndex >= 9) {
-      animationIndex = 0;
+    // 根据实际图片尺寸设置大小
+    switch (type) {
+      case 0: // LargeCactus1: 48x95
+        size = Vector2(48, 95);
+        break;
+      case 1: // LargeCactus2: 99x95
+        size = Vector2(99, 95);
+        break;
+      case 2: // LargeCactus3: 102x95
+        size = Vector2(102, 95);
+        break;
+      default:
+        size = Vector2(48, 95); // 默认使用第一个尺寸
+        break;
     }
     
-    // 参考Python版本: SCREEN.blit(self.image[self.index // 5], self.rect)
-    sprite = birdSprites[animationIndex ~/ 5];
-    animationIndex += 1;
+    // 更新碰撞矩形
+    _updateCollisionRect();
   }
 }
