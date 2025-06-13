@@ -10,10 +10,20 @@ import '../models/gomoku_game_model.dart';
 /// 4. 最后一步高亮显示
 class GomokuGameWidget extends StatefulWidget {
   final GomokuGameModel gameModel;
+  final int? hoverRow;      // 外部传入的悬停行
+  final int? hoverCol;      // 外部传入的悬停列
+  final Function(PointerEvent)? onHover;      // 鼠标悬停回调
+  final Function(TapDownDetails)? onTap;      // 点击回调
+  final Function(PointerEvent)? onMouseExit;  // 鼠标离开回调
   
   const GomokuGameWidget({
     super.key,
     required this.gameModel,
+    this.hoverRow,
+    this.hoverCol,
+    this.onHover,
+    this.onTap,
+    this.onMouseExit,
   });
 
   @override
@@ -28,10 +38,6 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
   // 最新下棋的动画位置
   int? _animatingRow;
   int? _animatingCol;
-  
-  // 鼠标悬停位置追踪 - 用于显示落子预览效果
-  int? _hoverRow;
-  int? _hoverCol;
 
   @override
   void initState() {
@@ -105,218 +111,36 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
                     offset: const Offset(0, 4),
                   ),
                 ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: MouseRegion(
-                  // 添加鼠标区域检测，提供更好的鼠标悬停体验
-                  onHover: _handleMouseHover,
-                  onExit: _handleMouseExit,
-                  child: CustomPaint(
-                    painter: GomokuBoardPainter(
-                      gameModel: widget.gameModel,
-                      pieceAnimation: _pieceScaleAnimation,
-                      animatingRow: _animatingRow,
-                      animatingCol: _animatingCol,
-                      hoverRow: _hoverRow, // 传递鼠标悬停行位置
-                      hoverCol: _hoverCol, // 传递鼠标悬停列位置
-                    ),
+              ),                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: MouseRegion(
+                    onHover: widget.onHover,
+                    onExit: widget.onMouseExit,
                     child: GestureDetector(
-                      onTapDown: _handleTapDown,
-                      onPanUpdate: _handlePanUpdate, // 添加鼠标移动处理
-                      onPanEnd: _handlePanEnd, // 添加鼠标离开处理
-                      // 确保手势检测器能接收到事件
+                      onTapDown: widget.onTap,
                       behavior: HitTestBehavior.opaque,
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: double.infinity,
-                      ), // 填满整个区域以接收点击事件
+                      child: CustomPaint(
+                        painter: GomokuBoardPainter(
+                          gameModel: widget.gameModel,
+                          pieceAnimation: _pieceScaleAnimation,
+                          animatingRow: _animatingRow,
+                          animatingCol: _animatingCol,
+                          hoverRow: widget.hoverRow,  // 使用外部传入的悬停位置
+                          hoverCol: widget.hoverCol,  // 使用外部传入的悬停位置
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
             ),
           ),
         );
       },
     );
-  }
-
-  /// 处理棋盘点击事件 - 使用精确坐标计算
-  void _handleTapDown(TapDownDetails details) {
-    
-    // 只在游戏进行中且轮到玩家时响应，分析模式下禁用交互
-    if (widget.gameModel.gameState != GomokuGameState.playing) {
-      return;
-    }
-    
-    if (!widget.gameModel.isPlayerTurn) {
-      return;
-    }
-
-    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) {
-      return;
-    }
-    
-    final size = renderBox.size;
-    final localPosition = details.localPosition;
-    
-    // 使用与绘制相同的精确坐标计算
-    final cellSize = size.width / GomokuGameModel.boardSize;
-    final double margin = cellSize * 0.5;
-    final double boardSize = size.width - margin * 2;
-    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
-    
-    // 计算点击位置对应的棋盘坐标
-    final adjustedX = localPosition.dx - margin;
-    final adjustedY = localPosition.dy - margin;
-    
-    // 找到最近的网格交叉点
-    final col = (adjustedX / actualCellSize + 0.5).floor();
-    final row = (adjustedY / actualCellSize + 0.5).floor();
-    
-    // 确保坐标在有效范围内
-    if (row >= 0 && row < GomokuGameModel.boardSize && 
-        col >= 0 && col < GomokuGameModel.boardSize) {
-      
-      // 检查该位置是否已有棋子
-      if (widget.gameModel.board[row][col] != PieceType.none) {
-        return;
-      }
-      
-      // 调用游戏模型的落子方法，处理玩家下棋
-      widget.gameModel.makePlayerMove(row, col);
-      
-    }
-  }
-
-  /// 处理鼠标拖拽移动事件 - 用于显示悬停效果，使用精确坐标
-  void _handlePanUpdate(DragUpdateDetails details) {
-    // 只在游戏进行中且轮到玩家时显示悬停效果，分析模式下禁用
-    if (widget.gameModel.gameState != GomokuGameState.playing ||
-        !widget.gameModel.isPlayerTurn) {
-      return;
-    }
-
-    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) {
-      return;
-    }
-
-    final size = renderBox.size;
-    final localPosition = details.localPosition;
-
-    // 使用与绘制相同的精确坐标计算
-    final cellSize = size.width / GomokuGameModel.boardSize;
-    final double margin = cellSize * 0.5;
-    final double boardSize = size.width - margin * 2;
-    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
-    
-    // 计算鼠标位置对应的棋盘坐标
-    final adjustedX = localPosition.dx - margin;
-    final adjustedY = localPosition.dy - margin;
-    
-    // 找到最近的网格交叉点
-    final col = (adjustedX / actualCellSize + 0.5).floor();
-    final row = (adjustedY / actualCellSize + 0.5).floor();
-
-    // 确保坐标在有效范围内且位置为空
-    if (row >= 0 && row < GomokuGameModel.boardSize &&
-        col >= 0 && col < GomokuGameModel.boardSize &&
-        widget.gameModel.board[row][col] == PieceType.none) {
-      
-      // 只在悬停位置改变时更新状态
-      if (_hoverRow != row || _hoverCol != col) {
-        setState(() {
-          _hoverRow = row;
-          _hoverCol = col;
-        });
-      }
-    } else {
-      // 鼠标移出有效区域，清除悬停状态
-      if (_hoverRow != null || _hoverCol != null) {
-        setState(() {
-          _hoverRow = null;
-          _hoverCol = null;
-        });
-      }
-    }
-  }
-
-  /// 处理鼠标拖拽结束事件 - 清除悬停效果
-  void _handlePanEnd(DragEndDetails details) {
-    // 清除悬停状态
-    if (_hoverRow != null || _hoverCol != null) {
-      setState(() {
-        _hoverRow = null;
-        _hoverCol = null;
-      });
-    }
-  }
-
-  /// 处理鼠标悬停事件 - 用于桌面端更精确的悬停检测，使用精确坐标
-  void _handleMouseHover(PointerEvent event) {
-    // 只在游戏进行中且轮到玩家时显示悬停效果，分析模式下禁用
-    if (widget.gameModel.gameState != GomokuGameState.playing ||
-        !widget.gameModel.isPlayerTurn) {
-      return;
-    }
-
-    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) {
-      return;
-    }
-
-    final size = renderBox.size;
-    final localPosition = event.localPosition;
-
-    // 使用与绘制相同的精确坐标计算
-    final cellSize = size.width / GomokuGameModel.boardSize;
-    final double margin = cellSize * 0.5;
-    final double boardSize = size.width - margin * 2;
-    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
-    
-    // 计算鼠标位置对应的棋盘坐标
-    final adjustedX = localPosition.dx - margin;
-    final adjustedY = localPosition.dy - margin;
-    
-    // 找到最近的网格交叉点
-    final col = (adjustedX / actualCellSize + 0.5).floor();
-    final row = (adjustedY / actualCellSize + 0.5).floor();
-
-    // 确保坐标在有效范围内且位置为空
-    if (row >= 0 && row < GomokuGameModel.boardSize &&
-        col >= 0 && col < GomokuGameModel.boardSize &&
-        widget.gameModel.board[row][col] == PieceType.none) {
-      
-      // 只在悬停位置改变时更新状态
-      if (_hoverRow != row || _hoverCol != col) {
-        setState(() {
-          _hoverRow = row;
-          _hoverCol = col;
-        });
-      }
-    } else {
-      // 鼠标移出有效区域，清除悬停状态
-      if (_hoverRow != null || _hoverCol != null) {
-        setState(() {
-          _hoverRow = null;
-          _hoverCol = null;
-        });
-      }
-    }
-  }
-
-  /// 处理鼠标离开事件 - 清除悬停效果
-  void _handleMouseExit(PointerEvent event) {
-    // 清除悬停状态
-    if (_hoverRow != null || _hoverCol != null) {
-      setState(() {
-        _hoverRow = null;
-        _hoverCol = null;
-      });
-    }
   }
 }
 
@@ -346,7 +170,7 @@ class GomokuBoardPainter extends CustomPainter {
     
     _drawBoard(canvas, size, cellSize);
     _drawPieces(canvas, cellSize);
-    _drawHoverEffect(canvas, cellSize); // 绘制鼠标悬停效果
+    _drawHoverEffect(canvas, size); // 修复：传递完整的Size对象而不是cellSize
   }
 
   /// 绘制棋盘网格和装饰 - 修复小屏幕下底部线条问题
@@ -570,21 +394,30 @@ class GomokuBoardPainter extends CustomPainter {
     );
   }
 
-  /// 绘制鼠标悬停效果 - 显示绿色圆圈提示可落子位置，使用精确坐标
-  void _drawHoverEffect(Canvas canvas, double cellSize) {
+  /// 绘制鼠标悬停效果 - 坐标系完全统一版本
+  void _drawHoverEffect(Canvas canvas, Size size) {
     // 只有在有悬停位置且游戏进行中时才绘制
     if (hoverRow == null || hoverCol == null) return;
     if (gameModel.gameState != GomokuGameState.playing) return;
     if (!gameModel.isPlayerTurn) return;
 
-    // 计算与网格线相同的精确坐标
+    // 坐标系完全统一：鼠标事件和Canvas绘制使用相同的计算逻辑
+    final cellSize = size.width / GomokuGameModel.boardSize;
     final double margin = cellSize * 0.5;
-    final double boardSize = cellSize * GomokuGameModel.boardSize - margin * 2;
+    final double boardSize = size.width - margin * 2;
     final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
 
     final centerX = margin + hoverCol! * actualCellSize;
     final centerY = margin + hoverRow! * actualCellSize;
     final radius = cellSize * 0.35;
+
+    // 调试输出 - 坐标系统一版本
+    print('=== 绘制悬停效果调试（坐标系统一）===');
+    print('绘制Canvas尺寸: ${size.width} x ${size.height}');
+    print('悬停网格位置: (${hoverRow}, ${hoverCol})');
+    print('计算参数: cellSize=${cellSize.toStringAsFixed(1)}, margin=${margin.toStringAsFixed(1)}');
+    print('绘制中心点: (${centerX.toStringAsFixed(1)}, ${centerY.toStringAsFixed(1)})');
+    print('actualCellSize: ${actualCellSize.toStringAsFixed(1)}');
 
     // 绘制半透明的绿色圆圈作为悬停提示
     final Paint hoverPaint = Paint()

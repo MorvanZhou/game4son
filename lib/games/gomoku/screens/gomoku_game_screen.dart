@@ -22,6 +22,10 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
   late GomokuGameModel gameModel;
   late AnimationController _backgroundController;
   late Animation<double> _backgroundAnimation;
+  
+  // 鼠标悬停位置追踪 - 用于显示落子预览效果
+  int? _hoverRow;
+  int? _hoverCol;
 
   @override
   void initState() {
@@ -176,11 +180,15 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
         // 设置和状态栏
         _buildGameSettingsBar(),
 
-        // 棋盘区域 - 直接使用GomokuGameWidget，不额外包装
+        // 棋盘区域 - 直接使用GomokuGameWidget，交互处理移到Widget内部
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: GomokuGameWidget(gameModel: gameModel),
+          child: GomokuGameWidget(
+            gameModel: gameModel,
+            hoverRow: _hoverRow,
+            hoverCol: _hoverCol,
+            onHover: _handleMouseHover,
+            onTap: _handleTapDown,
+            onMouseExit: _handleMouseExit,
           ),
         ),
       ],
@@ -636,5 +644,134 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
         ),
       ],
     );
+  }
+
+  /// 处理点击事件 - 与悬停事件使用完全相同的坐标计算
+  void _handleTapDown(TapDownDetails details) {
+    // 只在游戏进行中且轮到玩家时响应
+    if (gameModel.gameState != GomokuGameState.playing ||
+        !gameModel.isPlayerTurn) {
+      return;
+    }
+
+    // 获取鼠标点击的坐标并计算对应的网格位置
+    // 使用与悬停事件完全相同的坐标计算逻辑
+    final localPosition = details.localPosition;
+    final gridCoords = _calculateGridCoordinates(localPosition);
+    
+    if (gridCoords != null) {
+      final (row, col) = gridCoords;
+      
+      // 检查该位置是否已有棋子
+      if (gameModel.board[row][col] == PieceType.none) {
+        // 调用游戏模型的落子方法
+        gameModel.makePlayerMove(row, col);
+        
+        print('=== 点击落子调试 ===');
+        print('点击坐标: (${localPosition.dx.toStringAsFixed(1)}, ${localPosition.dy.toStringAsFixed(1)})');
+        print('网格坐标: ($row, $col)');
+      }
+    }
+  }
+
+  /// 计算给定坐标对应的网格坐标 - 直接基于Widget坐标系
+  /// 返回 (row, col) 或 null（如果坐标无效）
+  (int, int)? _calculateGridCoordinates(Offset localPosition) {
+    // 现在 localPosition 是相对于 GomokuGameWidget 内部的 MouseRegion 的
+    // 这意味着坐标系与 CustomPaint 的 Canvas 完全一致
+    
+    // 首先获取当前的 GomokuGameWidget 的尺寸信息
+    // 由于我们无法直接获取 Widget 内部的尺寸，我们需要基于屏幕信息推算
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) {
+      return null;
+    }
+
+    final screenSize = renderBox.size;
+    final availableWidth = screenSize.width;
+    final availableHeight = screenSize.height - 60; // 减去设置栏高度（大约）
+    
+    // 计算棋盘实际尺寸（与 GomokuGameWidget 内部逻辑一致）
+    final boardSize = availableWidth < availableHeight ? availableWidth : availableHeight;
+    final containerMargin = 8.0;
+    final actualCanvasSize = boardSize - containerMargin * 2;
+    
+    // 检查坐标是否在 Canvas 区域内
+    if (localPosition.dx < 0 || localPosition.dy < 0 || 
+        localPosition.dx > actualCanvasSize || localPosition.dy > actualCanvasSize) {
+      return null;
+    }
+    
+    // 使用与 Canvas 绘制完全相同的坐标计算
+    final cellSize = actualCanvasSize / GomokuGameModel.boardSize;
+    final double margin = cellSize * 0.5;
+    final double boardDrawSize = actualCanvasSize - margin * 2;
+    final double actualCellSize = boardDrawSize / (GomokuGameModel.boardSize - (availableWidth < availableHeight ? 1 : 0));
+    
+    // 计算到最近交点的距离
+    final adjustedX = localPosition.dx - margin;
+    final adjustedY = localPosition.dy - margin;
+    
+    // 使用网格交点布局计算行列
+    final col = (adjustedX / actualCellSize + 0.5).floor();
+    final row = (adjustedY / actualCellSize + 0.5).floor();
+    
+    // 检查是否为有效位置
+    if (row >= 0 && row < GomokuGameModel.boardSize &&
+        col >= 0 && col < GomokuGameModel.boardSize) {
+      return (row, col);
+    }
+    
+    return null;
+  }
+
+  /// 处理鼠标悬停事件 - 屏幕级别坐标处理
+  void _handleMouseHover(PointerEvent event) {
+    // 只在游戏进行中且轮到玩家时显示悬停效果
+    if (gameModel.gameState != GomokuGameState.playing ||
+        !gameModel.isPlayerTurn) {
+      return;
+    }
+
+    // 使用与点击事件完全相同的坐标计算逻辑
+    final localPosition = event.localPosition;
+    final gridCoords = _calculateGridCoordinates(localPosition);
+    
+    if (gridCoords != null) {
+      final (row, col) = gridCoords;
+      
+      // 检查是否为有效位置（空位置）
+      if (gameModel.board[row][col] == PieceType.none) {
+        if (_hoverRow != row || _hoverCol != col) {
+          setState(() {
+            _hoverRow = row;
+            _hoverCol = col;
+          });
+          
+          print('=== 悬停调试（统一坐标系）===');
+          print('屏幕坐标: (${localPosition.dx.toStringAsFixed(1)}, ${localPosition.dy.toStringAsFixed(1)})');
+          print('网格坐标: ($row, $col)');
+        }
+      } else {
+        _clearHoverState();
+      }
+    } else {
+      _clearHoverState();
+    }
+  }
+
+  /// 处理鼠标离开事件
+  void _handleMouseExit(PointerEvent event) {
+    _clearHoverState();
+  }
+
+  /// 清除悬停状态
+  void _clearHoverState() {
+    if (_hoverRow != null || _hoverCol != null) {
+      setState(() {
+        _hoverRow = null;
+        _hoverCol = null;
+      });
+    }
   }
 }

@@ -18,7 +18,7 @@ class ChromeDinoGame extends FlameGame
   static const double minScreenWidth = 800.0;     // 最小游戏宽度
   static const double minScreenHeight = 400.0;    // 最小游戏高度
   static const double aspectRatio = 16 / 9;       // 首选宽高比
-  static const int initialGameSpeed = 10;
+  static const int initialGameSpeed = 4;
 
   // 实际游戏尺寸 - 运行时根据屏幕计算
   late double gameWidth;
