@@ -667,9 +667,7 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
         // 调用游戏模型的落子方法
         gameModel.makePlayerMove(row, col);
         
-        print('=== 点击落子调试 ===');
-        print('点击坐标: (${localPosition.dx.toStringAsFixed(1)}, ${localPosition.dy.toStringAsFixed(1)})');
-        print('网格坐标: ($row, $col)');
+        
       }
     }
   }
@@ -748,9 +746,6 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
             _hoverCol = col;
           });
           
-          print('=== 悬停调试（统一坐标系）===');
-          print('屏幕坐标: (${localPosition.dx.toStringAsFixed(1)}, ${localPosition.dy.toStringAsFixed(1)})');
-          print('网格坐标: ($row, $col)');
         }
       } else {
         _clearHoverState();

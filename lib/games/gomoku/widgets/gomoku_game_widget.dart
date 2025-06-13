@@ -411,14 +411,6 @@ class GomokuBoardPainter extends CustomPainter {
     final centerY = margin + hoverRow! * actualCellSize;
     final radius = cellSize * 0.35;
 
-    // 调试输出 - 坐标系统一版本
-    print('=== 绘制悬停效果调试（坐标系统一）===');
-    print('绘制Canvas尺寸: ${size.width} x ${size.height}');
-    print('悬停网格位置: (${hoverRow}, ${hoverCol})');
-    print('计算参数: cellSize=${cellSize.toStringAsFixed(1)}, margin=${margin.toStringAsFixed(1)}');
-    print('绘制中心点: (${centerX.toStringAsFixed(1)}, ${centerY.toStringAsFixed(1)})');
-    print('actualCellSize: ${actualCellSize.toStringAsFixed(1)}');
-
     // 绘制半透明的绿色圆圈作为悬停提示
     final Paint hoverPaint = Paint()
       ..color = const Color(0xFF4CAF50).withValues(alpha: 0.4) // 绿色半透明
