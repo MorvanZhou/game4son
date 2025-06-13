@@ -80,56 +80,69 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1.0, // 正方形棋盘
-      child: Container(
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          // 木质棋盘背景
-          color: const Color(0xFFD4A574),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: MouseRegion(
-            // 添加鼠标区域检测，提供更好的鼠标悬停体验
-            onHover: _handleMouseHover,
-            onExit: _handleMouseExit,
-            child: CustomPaint(
-              painter: GomokuBoardPainter(
-                gameModel: widget.gameModel,
-                pieceAnimation: _pieceScaleAnimation,
-                animatingRow: _animatingRow,
-                animatingCol: _animatingCol,
-                hoverRow: _hoverRow, // 传递鼠标悬停行位置
-                hoverCol: _hoverCol, // 传递鼠标悬停列位置
+    // 使用LayoutBuilder来获取可用空间，确保棋盘在任何屏幕尺寸下都能正确显示
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 计算可用的最大尺寸，选择宽度和高度中较小的值来保持正方形
+        final availableWidth = constraints.maxWidth;
+        final availableHeight = constraints.maxHeight;
+        final boardSize = (availableWidth < availableHeight ? availableWidth : availableHeight) ; 
+        
+        return Center(
+          child: SizedBox(
+            width: boardSize,
+            height: boardSize,
+            child: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                // 木质棋盘背景
+                color: const Color(0xFFD4A574),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: GestureDetector(
-                onTapDown: _handleTapDown,
-                onPanUpdate: _handlePanUpdate, // 添加鼠标移动处理
-                onPanEnd: _handlePanEnd, // 添加鼠标离开处理
-                // 确保手势检测器能接收到事件
-                behavior: HitTestBehavior.opaque,
-                child: SizedBox(
-                  width: double.infinity,
-                  height: double.infinity,
-                ), // 填满整个区域以接收点击事件
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: MouseRegion(
+                  // 添加鼠标区域检测，提供更好的鼠标悬停体验
+                  onHover: _handleMouseHover,
+                  onExit: _handleMouseExit,
+                  child: CustomPaint(
+                    painter: GomokuBoardPainter(
+                      gameModel: widget.gameModel,
+                      pieceAnimation: _pieceScaleAnimation,
+                      animatingRow: _animatingRow,
+                      animatingCol: _animatingCol,
+                      hoverRow: _hoverRow, // 传递鼠标悬停行位置
+                      hoverCol: _hoverCol, // 传递鼠标悬停列位置
+                    ),
+                    child: GestureDetector(
+                      onTapDown: _handleTapDown,
+                      onPanUpdate: _handlePanUpdate, // 添加鼠标移动处理
+                      onPanEnd: _handlePanEnd, // 添加鼠标离开处理
+                      // 确保手势检测器能接收到事件
+                      behavior: HitTestBehavior.opaque,
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: double.infinity,
+                      ), // 填满整个区域以接收点击事件
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  /// 处理棋盘点击事件
+  /// 处理棋盘点击事件 - 使用精确坐标计算
   void _handleTapDown(TapDownDetails details) {
     
     // 只在游戏进行中且轮到玩家时响应，分析模式下禁用交互
@@ -149,10 +162,19 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
     final size = renderBox.size;
     final localPosition = details.localPosition;
     
-    // 计算点击位置对应的棋盘坐标
+    // 使用与绘制相同的精确坐标计算
     final cellSize = size.width / GomokuGameModel.boardSize;
-    final row = (localPosition.dy / cellSize).floor();
-    final col = (localPosition.dx / cellSize).floor();
+    final double margin = cellSize * 0.5;
+    final double boardSize = size.width - margin * 2;
+    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
+    
+    // 计算点击位置对应的棋盘坐标
+    final adjustedX = localPosition.dx - margin;
+    final adjustedY = localPosition.dy - margin;
+    
+    // 找到最近的网格交叉点
+    final col = (adjustedX / actualCellSize + 0.5).floor();
+    final row = (adjustedY / actualCellSize + 0.5).floor();
     
     // 确保坐标在有效范围内
     if (row >= 0 && row < GomokuGameModel.boardSize && 
@@ -169,7 +191,7 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
     }
   }
 
-  /// 处理鼠标拖拽移动事件 - 用于显示悬停效果
+  /// 处理鼠标拖拽移动事件 - 用于显示悬停效果，使用精确坐标
   void _handlePanUpdate(DragUpdateDetails details) {
     // 只在游戏进行中且轮到玩家时显示悬停效果，分析模式下禁用
     if (widget.gameModel.gameState != GomokuGameState.playing ||
@@ -185,10 +207,19 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
     final size = renderBox.size;
     final localPosition = details.localPosition;
 
-    // 计算鼠标位置对应的棋盘坐标
+    // 使用与绘制相同的精确坐标计算
     final cellSize = size.width / GomokuGameModel.boardSize;
-    final row = (localPosition.dy / cellSize).floor();
-    final col = (localPosition.dx / cellSize).floor();
+    final double margin = cellSize * 0.5;
+    final double boardSize = size.width - margin * 2;
+    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
+    
+    // 计算鼠标位置对应的棋盘坐标
+    final adjustedX = localPosition.dx - margin;
+    final adjustedY = localPosition.dy - margin;
+    
+    // 找到最近的网格交叉点
+    final col = (adjustedX / actualCellSize + 0.5).floor();
+    final row = (adjustedY / actualCellSize + 0.5).floor();
 
     // 确保坐标在有效范围内且位置为空
     if (row >= 0 && row < GomokuGameModel.boardSize &&
@@ -224,7 +255,7 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
     }
   }
 
-  /// 处理鼠标悬停事件 - 用于桌面端更精确的悬停检测
+  /// 处理鼠标悬停事件 - 用于桌面端更精确的悬停检测，使用精确坐标
   void _handleMouseHover(PointerEvent event) {
     // 只在游戏进行中且轮到玩家时显示悬停效果，分析模式下禁用
     if (widget.gameModel.gameState != GomokuGameState.playing ||
@@ -240,10 +271,19 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
     final size = renderBox.size;
     final localPosition = event.localPosition;
 
-    // 计算鼠标位置对应的棋盘坐标
+    // 使用与绘制相同的精确坐标计算
     final cellSize = size.width / GomokuGameModel.boardSize;
-    final row = (localPosition.dy / cellSize).floor();
-    final col = (localPosition.dx / cellSize).floor();
+    final double margin = cellSize * 0.5;
+    final double boardSize = size.width - margin * 2;
+    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
+    
+    // 计算鼠标位置对应的棋盘坐标
+    final adjustedX = localPosition.dx - margin;
+    final adjustedY = localPosition.dy - margin;
+    
+    // 找到最近的网格交叉点
+    final col = (adjustedX / actualCellSize + 0.5).floor();
+    final row = (adjustedY / actualCellSize + 0.5).floor();
 
     // 确保坐标在有效范围内且位置为空
     if (row >= 0 && row < GomokuGameModel.boardSize &&
@@ -309,28 +349,34 @@ class GomokuBoardPainter extends CustomPainter {
     _drawHoverEffect(canvas, cellSize); // 绘制鼠标悬停效果
   }
 
-  /// 绘制棋盘网格和装饰
+  /// 绘制棋盘网格和装饰 - 修复小屏幕下底部线条问题
   void _drawBoard(Canvas canvas, Size size, double cellSize) {
     final Paint gridPaint = Paint()
       ..color = const Color(0xFF8B4513)
       ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round; // 添加圆角线帽，改善视觉效果
 
-    // 绘制网格线
+    // 计算实际可用的绘制区域，确保精确对齐
+    final double margin = cellSize * 0.5; // 边距为半个格子大小
+    final double boardSize = size.width - margin * 2; // 可用绘制区域
+    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1); // 精确计算格子间距
+
+    // 绘制网格线 - 确保所有线条都完整显示
     for (int i = 0; i < GomokuGameModel.boardSize; i++) {
-      final offset = i * cellSize + cellSize / 2;
+      final double lineOffset = margin + i * actualCellSize;
       
-      // 水平线
+      // 水平线 - 确保从左边距到右边距完整绘制
       canvas.drawLine(
-        Offset(cellSize / 2, offset),
-        Offset(size.width - cellSize / 2, offset),
+        Offset(margin, lineOffset),
+        Offset(size.width - margin, lineOffset),
         gridPaint,
       );
       
-      // 垂直线
+      // 垂直线 - 确保从上边距到下边距完整绘制
       canvas.drawLine(
-        Offset(offset, cellSize / 2),
-        Offset(offset, size.height - cellSize / 2),
+        Offset(lineOffset, margin),
+        Offset(lineOffset, size.height - margin),
         gridPaint,
       );
     }
@@ -339,11 +385,16 @@ class GomokuBoardPainter extends CustomPainter {
     _drawStarPoints(canvas, cellSize);
   }
 
-  /// 绘制棋盘星位点（天元等关键位置标记）
+  /// 绘制棋盘星位点（天元等关键位置标记） - 使用精确坐标
   void _drawStarPoints(Canvas canvas, double cellSize) {
     final Paint starPaint = Paint()
       ..color = const Color(0xFF8B4513)
       ..style = PaintingStyle.fill;
+
+    // 计算与网格线相同的精确坐标
+    final double margin = cellSize * 0.5;
+    final double boardSize = cellSize * GomokuGameModel.boardSize - margin * 2;
+    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
 
     // 标准五子棋星位：天元(7,7)和四个角星
     final starPoints = [
@@ -359,8 +410,9 @@ class GomokuBoardPainter extends CustomPainter {
       final col = point[1];
       
       if (row < GomokuGameModel.boardSize && col < GomokuGameModel.boardSize) {
-        final centerX = col * cellSize + cellSize / 2;
-        final centerY = row * cellSize + cellSize / 2;
+        // 使用与网格线相同的精确坐标计算
+        final centerX = margin + col * actualCellSize;
+        final centerY = margin + row * actualCellSize;
         
         canvas.drawCircle(
           Offset(centerX, centerY),
@@ -371,15 +423,21 @@ class GomokuBoardPainter extends CustomPainter {
     }
   }
 
-  /// 绘制所有棋子
+  /// 绘制所有棋子 - 使用精确坐标与网格线对齐
   void _drawPieces(Canvas canvas, double cellSize) {
+    // 计算与网格线相同的精确坐标
+    final double margin = cellSize * 0.5;
+    final double boardSize = cellSize * GomokuGameModel.boardSize - margin * 2;
+    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
+
     for (int row = 0; row < GomokuGameModel.boardSize; row++) {
       for (int col = 0; col < GomokuGameModel.boardSize; col++) {
         final piece = gameModel.board[row][col];
         
         if (piece != PieceType.none) {
-          final centerX = col * cellSize + cellSize / 2;
-          final centerY = row * cellSize + cellSize / 2;
+          // 使用与网格线相同的精确坐标计算
+          final centerX = margin + col * actualCellSize;
+          final centerY = margin + row * actualCellSize;
           
           // 检查是否为正在动画的棋子
           double scale = 1.0;
@@ -512,15 +570,20 @@ class GomokuBoardPainter extends CustomPainter {
     );
   }
 
-  /// 绘制鼠标悬停效果 - 显示绿色圆圈提示可落子位置
+  /// 绘制鼠标悬停效果 - 显示绿色圆圈提示可落子位置，使用精确坐标
   void _drawHoverEffect(Canvas canvas, double cellSize) {
     // 只有在有悬停位置且游戏进行中时才绘制
     if (hoverRow == null || hoverCol == null) return;
     if (gameModel.gameState != GomokuGameState.playing) return;
     if (!gameModel.isPlayerTurn) return;
 
-    final centerX = hoverCol! * cellSize + cellSize / 2;
-    final centerY = hoverRow! * cellSize + cellSize / 2;
+    // 计算与网格线相同的精确坐标
+    final double margin = cellSize * 0.5;
+    final double boardSize = cellSize * GomokuGameModel.boardSize - margin * 2;
+    final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1);
+
+    final centerX = margin + hoverCol! * actualCellSize;
+    final centerY = margin + hoverRow! * actualCellSize;
     final radius = cellSize * 0.35;
 
     // 绘制半透明的绿色圆圈作为悬停提示

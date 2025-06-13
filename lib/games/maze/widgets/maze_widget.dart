@@ -163,7 +163,7 @@ class _MazeWidgetState extends State<MazeWidget> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Main maze area with touch controls
+        // Main maze area with touch controls - 使用LayoutBuilder自适应屏幕尺寸
         Expanded(
           child: Focus(
             focusNode: _focusNode,
@@ -209,23 +209,35 @@ class _MazeWidgetState extends State<MazeWidget> with TickerProviderStateMixin {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: AspectRatio(
-                    aspectRatio: 1.0,
-                    child: AnimatedBuilder(
-                      animation: _animationController,
-                      builder: (context, child) {
-                        return CustomPaint(
-                          painter: CyberMazePainter(
-                            maze: widget.gameModel.maze,
-                            player: widget.gameModel.player,
-                            mazeWidth: widget.gameModel.mazeWidth,
-                            mazeHeight: widget.gameModel.mazeHeight,
-                            animationValue: _animationController.value,
-                            pulseValue: _pulseAnimation.value,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // 计算可用的最大尺寸，选择宽度和高度中较小的值来保持正方形
+                      final availableWidth = constraints.maxWidth;
+                      final availableHeight = constraints.maxHeight;
+                      final mazeSize = (availableWidth < availableHeight ? availableWidth : availableHeight);
+                      
+                      return Center(
+                        child: SizedBox(
+                          width: mazeSize,
+                          height: mazeSize,
+                          child: AnimatedBuilder(
+                            animation: _animationController,
+                            builder: (context, child) {
+                              return CustomPaint(
+                                painter: CyberMazePainter(
+                                  maze: widget.gameModel.maze,
+                                  player: widget.gameModel.player,
+                                  mazeWidth: widget.gameModel.mazeWidth,
+                                  mazeHeight: widget.gameModel.mazeHeight,
+                                  animationValue: _animationController.value,
+                                  pulseValue: _pulseAnimation.value,
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

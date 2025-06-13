@@ -213,6 +213,7 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
         builder: (context, constraints) {
           // 判断屏幕宽度，决定使用单行还是多行布局
           final isNarrowScreen = constraints.maxWidth < 400;
+          final isVeryNarrowScreen = constraints.maxWidth < 250; // 超窄屏幕特殊处理
           
           if (isNarrowScreen) {
             // 窄屏幕：使用两行布局
@@ -262,27 +263,35 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
                 
                 const SizedBox(height: 6), // 行间距
                 
-                // 第二行：设置选项
+                // 第二行：设置选项 - 使用Flexible防止溢出
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // 先后手选择
-                    _buildCompactSettingsGroup(
-                      label: '先手',
-                      options: [
-                        ('我', gameModel.playerGoesFirst, () => gameModel.setPlayerGoesFirst(true)),
-                        ('AI', !gameModel.playerGoesFirst, () => gameModel.setPlayerGoesFirst(false)),
-                      ],
+                    // 先后手选择 - 使用Flexible防止溢出
+                    Flexible(
+                      flex: 1,
+                      child: _buildCompactSettingsGroup(
+                        label: isVeryNarrowScreen ? '先' : '先手', // 超窄屏使用简化标签
+                        options: [
+                          ('我', gameModel.playerGoesFirst, () => gameModel.setPlayerGoesFirst(true)),
+                          ('AI', !gameModel.playerGoesFirst, () => gameModel.setPlayerGoesFirst(false)),
+                        ],
+                      ),
                     ),
                     
-                    // 难度选择
-                    _buildCompactSettingsGroup(
-                      label: '难度',
-                      options: [
-                        ('易', gameModel.difficulty == DifficultyLevel.easy, () => gameModel.setDifficulty(DifficultyLevel.easy)),
-                        ('中', gameModel.difficulty == DifficultyLevel.medium, () => gameModel.setDifficulty(DifficultyLevel.medium)),
-                        ('难', gameModel.difficulty == DifficultyLevel.hard, () => gameModel.setDifficulty(DifficultyLevel.hard)),
-                      ],
+                    SizedBox(width: isVeryNarrowScreen ? 4 : 8), // 超窄屏减少间距
+                    
+                    // 难度选择 - 使用Flexible防止溢出
+                    Flexible(
+                      flex: 1,
+                      child: _buildCompactSettingsGroup(
+                        label: isVeryNarrowScreen ? '难' : '难度', // 超窄屏使用简化标签
+                        options: [
+                          ('易', gameModel.difficulty == DifficultyLevel.easy, () => gameModel.setDifficulty(DifficultyLevel.easy)),
+                          ('中', gameModel.difficulty == DifficultyLevel.medium, () => gameModel.setDifficulty(DifficultyLevel.medium)),
+                          ('难', gameModel.difficulty == DifficultyLevel.hard, () => gameModel.setDifficulty(DifficultyLevel.hard)),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -360,7 +369,7 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
     );
   }
 
-  /// 构建紧凑的设置组件，减少代码重复
+  /// 构建紧凑的设置组件，减少代码重复，支持自适应宽度
   Widget _buildCompactSettingsGroup({
     required String label,
     required List<(String, bool, VoidCallback)> options,
@@ -368,22 +377,29 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          '$label：',
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.white.withOpacity(0.7),
+        // 标签 - 使用Flexible确保不会溢出
+        Flexible(
+          child: Text(
+            '$label：',
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.white.withOpacity(0.7),
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(width: 4),
+        // 选项按钮 - 使用Flexible包装
         ...options.map((option) {
           final (text, isSelected, onTap) = option;
-          return Padding(
-            padding: const EdgeInsets.only(right: 2),
-            child: _buildQuickToggle(
-              text: text,
-              isSelected: isSelected,
-              onTap: onTap,
+          return Flexible(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 2),
+              child: _buildQuickToggle(
+                text: text,
+                isSelected: isSelected,
+                onTap: onTap,
+              ),
             ),
           );
         }).toList(),
