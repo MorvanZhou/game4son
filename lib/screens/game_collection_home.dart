@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../games/maze/screens/maze_game_screen.dart';
 import '../games/dino-jump/screens/chrome_dino_game_screen.dart';
 import '../games/gomoku/screens/gomoku_game_screen.dart';
+import '../games/go/screens/go_game_screen.dart';
 
 class GameCollectionHome extends StatefulWidget {
   const GameCollectionHome({super.key});
@@ -213,6 +214,28 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
                   },
                 ),
                 
+                // 围棋游戏卡片
+                _buildGameCard(
+                  title: '围棋',
+                  icon: Icons.circle_outlined,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF9C27B0),
+                      Color(0xFFBA68C8),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GoGameScreen(),
+                      ),
+                    );
+                  },
+                ),
+                
                 _buildComingSoonCard(
                   title: '记忆翻牌',
                   icon: Icons.memory,
@@ -221,11 +244,6 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
                 _buildComingSoonCard(
                   title: '数字拼图',
                   icon: Icons.grid_3x3,
-                ),
-                
-                _buildComingSoonCard(
-                  title: '扫雷游戏',
-                  icon: Icons.flag,
                 ),
               ],
             ),
