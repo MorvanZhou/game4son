@@ -3,6 +3,7 @@ import '../games/maze/screens/maze_game_screen.dart';
 import '../games/dino-jump/screens/chrome_dino_game_screen.dart';
 import '../games/gomoku/screens/gomoku_game_screen.dart';
 import '../games/go/screens/go_game_screen.dart';
+import '../games/raiden/screens/raiden_game_screen.dart';
 
 class GameCollectionHome extends StatefulWidget {
   const GameCollectionHome({super.key});
@@ -231,6 +232,28 @@ class _GameCollectionHomeState extends State<GameCollectionHome>
                       context,
                       MaterialPageRoute(
                         builder: (context) => const GoGameScreen(),
+                      ),
+                    );
+                  },
+                ),
+                
+                // 雷电射击游戏卡片
+                _buildGameCard(
+                  title: '雷电射击',
+                  icon: Icons.rocket_launch,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFFF6B6B),
+                      Color(0xFF4ECDC4),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RaidenGameScreen(),
                       ),
                     );
                   },
