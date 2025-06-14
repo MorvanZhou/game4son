@@ -20,11 +20,7 @@ class BirdObstacle extends Obstacle {
 
   @override
   Future<void> onLoad() async {
-    // 获取游戏尺寸（从父组件获取）
-    gameWidth = (parent as dynamic).gameWidth ?? 1100.0;
-    gameHeight = (parent as dynamic).gameHeight ?? 600.0;
-    // 鸟类使用基础地面位置计算飞行高度，而不是地面轨道位置
-    groundY = DinoGameConfig.groundY;
+    await super.onLoad(); // 先调用父类的onLoad获取游戏尺寸
     
     // 根据游戏高度动态计算飞鸟飞行高度
     final List<double> birdHeights = _calculateBirdHeights();

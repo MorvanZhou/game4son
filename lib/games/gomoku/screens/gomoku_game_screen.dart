@@ -213,7 +213,7 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
         ),
         border: Border(
           bottom: BorderSide(
-            color: const Color(0xFF6366F1).withOpacity(0.3),
+            color: const Color(0xFF6366F1).withValues(alpha: 100),
             width: 1,
           ),
         ),
@@ -392,7 +392,7 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
             '$label：',
             style: TextStyle(
               fontSize: 10,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 200),
             ),
             overflow: TextOverflow.ellipsis,
           ),

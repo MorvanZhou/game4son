@@ -3,19 +3,19 @@
 class DinoGameConfig {
   // ========== 环境定义层 - 全局缩放因子 ==========
   // 调整这个参数可以整体缩放所有游戏元素，解决相对位移问题
-  static const double GLOBAL_SCALE_FACTOR = 0.3;
+  static const double GLOBAL_SCALE_FACTOR = 0.5;
   
   // 游戏基础常量（未缩放的原始值）
   static const double BASE_SCREEN_WIDTH = 800.0;
   static const double BASE_SCREEN_HEIGHT = 400.0;
-  static const double BASE_GAME_SPEED = 4.0;
+  static const double BASE_GAME_SPEED = 12.0;
   static const double BASE_GROUND_Y = 380.0;
   
   // 恐龙基础常量
   static const double BASE_DINO_X = 80.0;
   static const double BASE_DINO_Y = 310.0;
-  static const double BASE_DINO_DUCK_Y = 340.0;
-  static const double BASE_JUMP_VEL = 7.6;
+  static const double BASE_DINO_DUCK_Y = BASE_DINO_Y + 30.0; // 蹲下时的Y位置
+  static const double BASE_JUMP_VEL = 8.5;
   static const double BASE_GRAVITY = 13.3;
   
   // UI基础常量
@@ -48,9 +48,10 @@ class DinoGameConfig {
   static const double BASE_BIRD_HEIGHT_OFFSET_1 = 20.0;
   static const double BASE_BIRD_HEIGHT_OFFSET_2 = 70.0;
   static const double BASE_BIRD_HEIGHT_OFFSET_3 = 130.0;
-// 碰撞检测偏移
-  static const double BASE_COLLISION_SHRINK_X = 6.0;
-  static const double BASE_COLLISION_SHRINK_Y = 4.0;
+  
+  // 碰撞检测偏移
+  static const double BASE_COLLISION_SHRINK_X = 8.0;
+  static const double BASE_COLLISION_SHRINK_Y = 6.0;
   static const double BASE_BIRD_COLLISION_SHRINK_X = 10.0;
   static const double BASE_BIRD_COLLISION_SHRINK_Y = 8.0;
   
@@ -66,6 +67,11 @@ class DinoGameConfig {
   // 地面轨道基础常量
   static const double BASE_TRACK_WIDTH = 2400.0;
   static const double BASE_TRACK_HEIGHT = 24.0;
+  static const double BASE_TRACK_OFFSET = 20.0; // 地面轨道相对于基础地面的偏移量
+  
+  // 基于地面的Y坐标计算（相对于基础地面位置的偏移）
+  static const double BASE_DINO_GROUND_OFFSET = -70.0; // 恐龙站在地面上的位置（负值表示在地面上方）
+  static const double BASE_DINO_DUCK_OFFSET = -40.0;   // 恐龙蹲下时的位置
   
   // ========== 缩放后的值获取方法 ==========
   
@@ -125,6 +131,12 @@ class DinoGameConfig {
   // 地面轨道参数
   static double get trackWidth => BASE_TRACK_WIDTH * GLOBAL_SCALE_FACTOR;
   static double get trackHeight => BASE_TRACK_HEIGHT * GLOBAL_SCALE_FACTOR;
+  static double get trackOffset => BASE_TRACK_OFFSET * GLOBAL_SCALE_FACTOR;
+  
+  // 基于地面的Y坐标计算 - 所有游戏元素相对于地面位置
+  static double get dinoGroundY => groundY + trackOffset + (BASE_DINO_GROUND_OFFSET * GLOBAL_SCALE_FACTOR);
+  static double get dinoDuckGroundY => groundY + trackOffset + (BASE_DINO_DUCK_OFFSET * GLOBAL_SCALE_FACTOR);
+  static double get obstacleGroundY => groundY + trackOffset - (BASE_DINO_DUCK_OFFSET * GLOBAL_SCALE_FACTOR);
   
   // 碰撞检测偏移
   static double get collisionShrinkX => BASE_COLLISION_SHRINK_X * GLOBAL_SCALE_FACTOR;

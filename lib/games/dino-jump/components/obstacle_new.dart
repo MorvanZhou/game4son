@@ -14,8 +14,8 @@ abstract class Obstacle extends SpriteComponent {
   // 障碍物类型
   int type = 0;
   
-  // 碰撞矩形 - 初始化为空矩形避免LateInitializationError
-  Rect obstacleRect = Rect.zero;
+  // 碰撞矩形
+  late Rect obstacleRect;
 
   Obstacle() {
     // 初始位置会在onLoad中设置
@@ -24,12 +24,12 @@ abstract class Obstacle extends SpriteComponent {
 
   @override
   Future<void> onLoad() async {
-    // 获取游戏尺寸（从父组件获取），使用配置系统基于地面位置计算
+    // 获取游戏尺寸（从父组件获取），使用配置系统
     gameWidth = (parent as dynamic).gameWidth ?? 1100.0;
     gameHeight = (parent as dynamic).gameHeight ?? 600.0;
-    groundY = DinoGameConfig.obstacleGroundY; // 使用配置系统计算的障碍物地面位置
+    groundY = DinoGameConfig.groundY; // 使用配置系统的地面位置
     
-    // 设置初始位置 - 障碍物底部对齐地面轨道顶部
+    // 设置初始位置
     position = Vector2(gameWidth, groundY);
     
     // 子类将设置具体的精灵和尺寸
@@ -70,12 +70,8 @@ abstract class Obstacle extends SpriteComponent {
     );
   }
 
-  /// 获取碰撞矩形 - 确保矩形已正确初始化
+  /// 获取碰撞矩形
   Rect getCollisionRect() {
-    // 如果矩形还没有初始化，先更新它
-    if (obstacleRect == Rect.zero) {
-      updateCollisionRect();
-    }
     return obstacleRect;
   }
 
@@ -87,7 +83,7 @@ abstract class Obstacle extends SpriteComponent {
   /// 重置障碍物到屏幕右侧
   void reset() {
     position.x = gameWidth + math.Random().nextInt(200);
-    position.y = groundY; // 障碍物底部对齐地面轨道顶部
+    position.y = groundY;
     updateCollisionRect();
   }
 }

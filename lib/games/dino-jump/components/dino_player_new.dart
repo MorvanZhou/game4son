@@ -6,10 +6,10 @@ import '../game_config.dart';
 /// 恐龙玩家组件 - 完全参考Python版本的Dinosaur类，使用配置系统统一管理缩放
 class DinoPlayer extends SpriteAnimationComponent {
   
-  // 恐龙常量 - 根据Python分析脚本优化的物理参数，使用配置系统基于地面位置计算
+  // 恐龙常量 - 根据Python分析脚本优化的物理参数，使用配置系统应用缩放
   static double get xPos => DinoGameConfig.dinoX;        // X_POS
-  static double get yPos => DinoGameConfig.dinoGroundY;       // Y_POS - 基于地面位置计算
-  static double get yPosDuck => DinoGameConfig.dinoDuckGroundY;   // Y_POS_DUCK - 基于地面位置计算
+  static double get yPos => DinoGameConfig.dinoY;       // Y_POS  
+  static double get yPosDuck => DinoGameConfig.dinoDuckY;   // Y_POS_DUCK
   static double get jumpVel => DinoGameConfig.jumpVel;      // 缩放后的初始跳跃速度
   static double get gravity => DinoGameConfig.gravity;     // 缩放后的重力加速度
   
@@ -40,8 +40,8 @@ class DinoPlayer extends SpriteAnimationComponent {
   late SpriteAnimationComponent duckAnimation;
   late SpriteComponent jumpSprite;
   
-  // 碰撞矩形 - 初始化为空矩形避免LateInitializationError
-  Rect dinoRect = Rect.zero;
+  // 碰撞矩形
+  late Rect dinoRect;
   
   // 音效系统 - 用于跳跃音效
   bool soundEnabled = true;
@@ -51,8 +51,8 @@ class DinoPlayer extends SpriteAnimationComponent {
 
   @override
   Future<void> onLoad() async {
-    // 获取游戏引擎中的地面位置，使用配置系统基于地面位置计算
-    dynamicGroundY = DinoGameConfig.dinoGroundY; // 使用配置系统计算的恐龙地面位置
+    // 获取游戏引擎中的地面位置，使用配置系统
+    dynamicGroundY = DinoGameConfig.groundY;
     
     // 设置恐龙位置和大小 - 统一使用bottomLeft锚点，Y坐标设为动态地面位置
     position = Vector2(xPos, dynamicGroundY); // 恐龙底部对齐地面
@@ -239,18 +239,14 @@ class DinoPlayer extends SpriteAnimationComponent {
     _updateCollisionRect();
   }
 
-  /// 获取碰撞矩形 - 确保矩形已正确初始化
+  /// 获取碰撞矩形
   Rect getCollisionRect() {
-    // 如果矩形还没有初始化，先更新它
-    if (dinoRect == Rect.zero) {
-      _updateCollisionRect();
-    }
     return dinoRect;
   }
 
   /// 更新地面位置 - 当屏幕尺寸改变时调用
   void updateGroundPosition(double newGroundY) {
-    dynamicGroundY = newGroundY + 20; // 加上偏移，与地面轨道顶部对齐
+    dynamicGroundY = newGroundY;
     
     // 更新恐龙位置以匹配新的地面位置
     if (!dinoJump) {

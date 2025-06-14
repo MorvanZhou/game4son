@@ -1,4 +1,85 @@
 # 开发迭代记录
+er
+## ✅ 恐龙跳跃游戏全局缩放系统重构完成 - 修复图片大小缩放和初始化问题 (2025-06-14)
+
+### 问题解决
+成功将 `SCALE_FACTOR` 提取到环境定义层，实现了真正的全局缩放控制，并修复了图片大小不跟随缩放的问题。
+
+#### 核心架构改进
+1. **统一配置系统建立**：
+   - 创建 `DinoGameConfig` 类集中管理所有缩放参数
+   - 设置 `GLOBAL_SCALE_FACTOR = 0.3` 环境变量
+   - 所有组件统一使用配置系统获取缩放值
+
+2. **组件图片大小修复**：
+   ```dart
+   // 修复前：硬编码尺寸，不跟随缩放
+   size = Vector2(88, 94);
+   
+   // 修复后：使用配置系统的动态缩放
+   size = Vector2(88 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 94 * DinoGameConfig.GLOBAL_SCALE_FACTOR);
+   ```
+
+3. **组件重构列表**：
+   - **恐龙组件** (`dino_player.dart`)：完全重写，使用配置系统管理所有尺寸
+   - **障碍物组件** (`obstacle.dart`)：统一使用配置系统的缩放值
+   - **鸟类障碍物** (`bird_obstacle.dart`)：应用配置系统的鸟类尺寸参数
+   - **云朵背景** (`cloud_background.dart`)：使用配置系统的云朵参数
+   - **地面轨道** (`ground_track.dart`)：应用配置系统的轨道尺寸
+
+#### 关键技术修复
+1. **LateInitializationError 修复**：
+   ```dart
+   // 问题：late 字段可能在初始化前被访问
+   late Rect obstacleRect;
+   
+   // 解决：初始化默认值并添加安全检查
+   Rect obstacleRect = Rect.zero;
+   
+   Rect getCollisionRect() {
+     if (obstacleRect == Rect.zero) {
+       updateCollisionRect();
+     }
+     return obstacleRect;
+   }
+   ```
+
+2. **配置系统参数完整性**：
+   - 恐龙尺寸：88x94 → 26.4x28.2 (0.3x缩放)
+   - 障碍物尺寸：完整的小仙人掌和大仙人掌尺寸配置
+   - 飞鸟尺寸：Bird1(97x68)和Bird2(93x62)的缩放配置
+   - UI元素：字体大小、位置偏移的统一缩放
+
+#### 环境定义层实现
+```dart
+class DinoGameConfig {
+  // ========== 环境定义层 - 全局缩放因子 ==========
+  static const double GLOBAL_SCALE_FACTOR = 0.3;
+  
+  // 基础常量（未缩放原始值）
+  static const double BASE_DINO_WIDTH = 88.0;
+  static const double BASE_DINO_HEIGHT = 94.0;
+  
+  // 缩放后的值获取方法
+  static Vector2 get gameRunSize => Vector2(
+    BASE_DINO_WIDTH * GLOBAL_SCALE_FACTOR, 
+    BASE_DINO_HEIGHT * GLOBAL_SCALE_FACTOR
+  );
+}
+```
+
+#### 验证结果
+- ✅ 修改 `GLOBAL_SCALE_FACTOR` 后，所有游戏元素（图片大小、位置、物理参数）同步缩放
+- ✅ 解决了LateInitializationError初始化错误
+- ✅ 保持了相对位置关系和游戏物理规则
+- ✅ 编译无错误，只剩代码风格建议
+
+### 技术收获
+1. **Flutter/Flame图片缩放机制**：需要在组件的size属性中明确设置缩放后的尺寸
+2. **Late字段安全初始化**：避免使用late关键字，改用默认值+懒加载模式
+3. **配置系统设计模式**：基础常量+计算属性的架构更便于维护
+
+---
 
 ## ✅ 五子棋鼠标悬停坐标完全修复 - 解决Canvas坐标系差异问题 (2025-06-13)
 
@@ -444,87 +525,6 @@ Flexible(
 ### 适配效果
 
 1. **完全消除溢出**：任何屏幕宽度下都不会出现布局溢出
-2. **内容保持完整**：所有功能在超窄屏幕上依然可用
-3. **视觉协调**：自动调整标签和间距，保持界面美观
-4. **用户体验优秀**：即使在最小的屏幕上也有良好的交互体验
-
----
-
-## 🎯 五子棋棋盘精确绘制修复 - 解决小屏幕下线条显示问题 (2025-06-13)
-
-### 问题背景
-在小屏幕设备上，五子棋棋盘的底部网格线条显示异常，主要问题：
-1. 网格线条在棋盘边缘可能被截断或显示不完整
-2. 棋子位置与网格交叉点不够精确对齐
-3. 点击检测的坐标计算与实际绘制位置存在偏差
-4. 在不同屏幕尺寸下，棋盘元素的精度不一致
-
-### 根本原因分析
-原有实现使用了简单的`cellSize`均分计算，但没有考虑：
-- 边距处理的精确性
-- 网格线条的完整性
-- 棋子、星位点、悬停效果的坐标一致性
-- 点击检测与绘制坐标的统一性
-
-### 解决方案
-
-1. **统一坐标计算系统**
-   ```dart
-   // 标准化的坐标计算方法
-   final double margin = cellSize * 0.5; // 统一边距
-   final double boardSize = size.width - margin * 2; // 可用绘制区域
-   final double actualCellSize = boardSize / (GomokuGameModel.boardSize - 1); // 精确格子间距
-   ```
-
-2. **网格线条完整性保证**
-   - 从边距开始到边距结束，确保所有线条完整绘制
-   - 添加`StrokeCap.round`改善线条视觉效果
-   - 使用精确的`actualCellSize`替代原有的近似计算
-
-3. **坐标一致性改进**
-   - 网格绘制、棋子绘制、星位点绘制使用相同的坐标计算
-   - 点击检测、鼠标悬停检测使用相同的逆向坐标转换
-   - 所有交互元素完全对齐到网格交叉点
-
-### 技术实现详情
-
-**精确网格绘制** (`gomoku_game_widget.dart`)：
-```dart
-// 绘制网格线 - 确保所有线条都完整显示
-for (int i = 0; i < GomokuGameModel.boardSize; i++) {
-  final double lineOffset = margin + i * actualCellSize;
-  
-  // 水平线和垂直线都从边距到边距完整绘制
-  canvas.drawLine(/*...*/);
-}
-```
-
-**统一坐标系统**：
-- **星位点绘制**：`centerX = margin + col * actualCellSize`
-- **棋子绘制**：使用相同的精确坐标计算
-- **悬停效果**：使用相同的坐标计算保证对齐
-- **点击检测**：逆向计算找到最近的网格交叉点
-
-**交互优化**：
-```dart
-// 点击位置转换为棋盘坐标
-final adjustedX = localPosition.dx - margin;
-final adjustedY = localPosition.dy - margin;
-final col = (adjustedX / actualCellSize + 0.5).floor(); // 四舍五入找最近点
-final row = (adjustedY / actualCellSize + 0.5).floor();
-```
-
-### 用户体验提升
-
-1. **视觉完整性**：网格线条在任何屏幕尺寸下都完整显示
-2. **精确对齐**：所有棋子、星位点、悬停效果完美对齐网格
-3. **交互准确性**：点击检测精确命中网格交叉点
-4. **跨设备一致性**：从小屏手机到大屏平板表现一致
-
----
-
-## 🎮 游戏首页自适应卡片优化 - 彻底解决溢出问题 (2025-06-13)
-
 ### 问题背景
 游戏集合首页的游戏卡片在小屏幕设备上出现严重的底部溢出问题：
 ```

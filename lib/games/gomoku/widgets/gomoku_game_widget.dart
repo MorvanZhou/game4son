@@ -106,7 +106,7 @@ class _GomokuGameWidgetState extends State<GomokuGameWidget>
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: Colors.black.withValues(alpha: 100),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -307,7 +307,7 @@ class GomokuBoardPainter extends CustomPainter {
       
       // 绘制棋子阴影
       final Paint shadowPaint = Paint()
-        ..color = Colors.black.withValues(alpha: 0.3)
+        ..color = Colors.black.withValues(alpha: 100)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
       
       canvas.drawCircle(
@@ -325,7 +325,7 @@ class GomokuBoardPainter extends CustomPainter {
       
       // 绘制高光
       final Paint highlightPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.3);
+        ..color = Colors.white.withValues(alpha: 100);
       
       canvas.drawCircle(
         Offset(centerX - radius * 0.3, centerY - radius * 0.3),
@@ -348,7 +348,7 @@ class GomokuBoardPainter extends CustomPainter {
       
       // 绘制棋子阴影
       final Paint shadowPaint = Paint()
-        ..color = Colors.black.withValues(alpha: 0.3)
+        ..color = Colors.black.withValues(alpha: 100)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
       
       canvas.drawCircle(
@@ -413,7 +413,7 @@ class GomokuBoardPainter extends CustomPainter {
 
     // 绘制半透明的绿色圆圈作为悬停提示
     final Paint hoverPaint = Paint()
-      ..color = const Color(0xFF4CAF50).withValues(alpha: 0.4) // 绿色半透明
+      ..color = const Color(0xFF4CAF50).withValues(alpha: 125) // 绿色半透明
       ..style = PaintingStyle.fill;
 
     // 绘制填充圆圈
@@ -425,7 +425,7 @@ class GomokuBoardPainter extends CustomPainter {
 
     // 绘制边框圆圈，提供更明显的视觉提示
     final Paint borderPaint = Paint()
-      ..color = const Color(0xFF4CAF50).withValues(alpha: 0.8) // 绿色边框
+      ..color = const Color(0xFF4CAF50).withValues(alpha: 225) // 绿色边框
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5;
 
@@ -437,7 +437,7 @@ class GomokuBoardPainter extends CustomPainter {
 
     // 添加内部小圆圈，增强视觉效果
     final Paint innerPaint = Paint()
-      ..color = const Color(0xFF4CAF50).withValues(alpha: 0.6)
+      ..color = const Color(0xFF4CAF50).withValues(alpha: 200)
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(
