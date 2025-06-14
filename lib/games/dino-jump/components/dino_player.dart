@@ -1,29 +1,31 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'obstacle.dart';
+import '../game_config.dart';
 
-/// 恐龙玩家组件 - 完全参考Python版本的Dinosaur类
+/// 恐龙玩家组件 - 完全参考Python版本的Dinosaur类，使用配置系统统一管理缩放
 class DinoPlayer extends SpriteAnimationComponent {
-  // 恐龙常量 - 根据Python分析脚本优化的物理参数
-  static const double xPos = 80.0;        // X_POS = 80
-  static const double yPos = 310.0;       // Y_POS = 310
-  static const double yPosDuck = 340.0;   // Y_POS_DUCK = 340
-  static const double jumpVel = 7.6;      // 优化后的初始跳跃速度 (px/frame)
-  static const double gravity = 13.3;     // 重力加速度 (px/s)
   
-  // 恐龙尺寸常量 - 基于实际图片尺寸
-  static final Vector2 runSize1 = Vector2(87, 94);        // DinoRun1 实际尺寸
-  static final Vector2 runSize2 = Vector2(88, 94);        // DinoRun2 实际尺寸  
-  static final Vector2 jumpSize = Vector2(88, 94);        // DinoJump 实际尺寸
-  static final Vector2 duckSize1 = Vector2(108, 60);      // DinoDuck1 实际尺寸
-  static final Vector2 duckSize2 = Vector2(116, 60);      // DinoDuck2 实际尺寸
-  static final Vector2 startSize = Vector2(97, 101);      // DinoStart 实际尺寸
-  static final Vector2 deadSize = Vector2(86, 101);       // DinoDead 实际尺寸
+  // 恐龙常量 - 根据Python分析脚本优化的物理参数，使用配置系统应用缩放
+  static double get xPos => DinoGameConfig.dinoX;        // X_POS
+  static double get yPos => DinoGameConfig.dinoY;       // Y_POS  
+  static double get yPosDuck => DinoGameConfig.dinoDuckY;   // Y_POS_DUCK
+  static double get jumpVel => DinoGameConfig.jumpVel;      // 缩放后的初始跳跃速度
+  static double get gravity => DinoGameConfig.gravity;     // 缩放后的重力加速度
   
-  // 统一使用的游戏尺寸 - 为了保持游戏平衡，使用平均尺寸
-  static final Vector2 gameRunSize = Vector2(88, 94);     // 跑步和跳跃统一尺寸
-  static final Vector2 gameDuckSize = Vector2(112, 60);   // 蹲下统一尺寸（取平均值）
-  static const double groundY = 380.0;                    // 地面Y坐标
+  // 恐龙尺寸常量 - 基于实际图片尺寸，使用配置系统应用缩放
+  static Vector2 get runSize1 => Vector2(87 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 94 * DinoGameConfig.GLOBAL_SCALE_FACTOR);        // DinoRun1 缩放尺寸
+  static Vector2 get runSize2 => Vector2(88 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 94 * DinoGameConfig.GLOBAL_SCALE_FACTOR);        // DinoRun2 缩放尺寸  
+  static Vector2 get jumpSize => Vector2(88 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 94 * DinoGameConfig.GLOBAL_SCALE_FACTOR);        // DinoJump 缩放尺寸
+  static Vector2 get duckSize1 => Vector2(108 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 60 * DinoGameConfig.GLOBAL_SCALE_FACTOR);      // DinoDuck1 缩放尺寸
+  static Vector2 get duckSize2 => Vector2(116 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 60 * DinoGameConfig.GLOBAL_SCALE_FACTOR);      // DinoDuck2 缩放尺寸
+  static Vector2 get startSize => Vector2(97 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 101 * DinoGameConfig.GLOBAL_SCALE_FACTOR);      // DinoStart 缩放尺寸
+  static Vector2 get deadSize => Vector2(86 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 101 * DinoGameConfig.GLOBAL_SCALE_FACTOR);       // DinoDead 缩放尺寸
+  
+  // 统一使用的游戏尺寸 - 为了保持游戏平衡，使用平均尺寸，使用配置系统应用缩放
+  static Vector2 get gameRunSize => Vector2(88 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 94 * DinoGameConfig.GLOBAL_SCALE_FACTOR);     // 跑步和跳跃统一尺寸
+  static Vector2 get gameDuckSize => Vector2(112 * DinoGameConfig.GLOBAL_SCALE_FACTOR, 60 * DinoGameConfig.GLOBAL_SCALE_FACTOR);   // 蹲下统一尺寸（取平均值）
+  static double get groundY => DinoGameConfig.groundY;                    // 地面Y坐标，使用配置系统
   
   // 恐龙状态 - 参考Python版本的状态变量
   bool dinoDuck = false;    // dino_duck
@@ -31,7 +33,7 @@ class DinoPlayer extends SpriteAnimationComponent {
   bool dinoJump = false;    // dino_jump
   
   int stepIndex = 0;        // step_index
-  double jumpVelocity = jumpVel;  // jump_vel
+  double jumpVelocity = 0;  // jump_vel，初始化为0，实际值从jumpVel获取
   
   // 精灵动画组件
   late SpriteAnimationComponent runAnimation;
@@ -45,18 +47,20 @@ class DinoPlayer extends SpriteAnimationComponent {
   bool soundEnabled = true;
 
   // 动态地面Y坐标 - 支持自适应屏幕高度
-  double dynamicGroundY = groundY;
+  double dynamicGroundY = 0;
 
   @override
   Future<void> onLoad() async {
-    // 获取游戏引擎中的地面位置
-    final gameHeight = (parent as dynamic).gameHeight ?? 600.0;
-    dynamicGroundY = gameHeight * 0.63; // 与地面轨道保持一致
+    // 获取游戏引擎中的地面位置，使用配置系统
+    dynamicGroundY = DinoGameConfig.groundY;
     
     // 设置恐龙位置和大小 - 统一使用bottomLeft锚点，Y坐标设为动态地面位置
     position = Vector2(xPos, dynamicGroundY); // 恐龙底部对齐地面
     size = gameRunSize; // 使用预定义的游戏跑步尺寸
     anchor = Anchor.bottomLeft;
+    
+    // 初始化跳跃速度
+    jumpVelocity = jumpVel;
     
     // 加载恐龙精灵图 - 参考Python版本的图片加载
     await _loadDinoSprites();
@@ -78,7 +82,7 @@ class DinoPlayer extends SpriteAnimationComponent {
     
     runAnimation = SpriteAnimationComponent(
       animation: SpriteAnimation.spriteList(runSprites, stepTime: 0.1),
-      size: size,
+      size: gameRunSize, // 使用配置系统的尺寸
     );
     
     // 蹲下动画 - 参考Python版本的DUCKING数组
@@ -89,13 +93,13 @@ class DinoPlayer extends SpriteAnimationComponent {
     
     duckAnimation = SpriteAnimationComponent(
       animation: SpriteAnimation.spriteList(duckSprites, stepTime: 0.1),
-      size: gameDuckSize, // 使用预定义的游戏蹲下尺寸
+      size: gameDuckSize, // 使用配置系统的游戏蹲下尺寸
     );
     
     // 跳跃精灵 - 参考Python版本的JUMPING
     jumpSprite = SpriteComponent(
       sprite: await Sprite.load('dino-jump.DinoJump.png'),
-      size: size,
+      size: gameRunSize, // 使用配置系统的尺寸
     );
   }
 
@@ -132,7 +136,7 @@ class DinoPlayer extends SpriteAnimationComponent {
     removeAll(children);
     add(duckAnimation);
     position.y = dynamicGroundY; // 底部对齐动态地面
-    size = gameDuckSize; // 使用预定义的游戏蹲下尺寸
+    size = gameDuckSize; // 使用配置系统的游戏蹲下尺寸
   }
 
   /// 恐龙跑步 - 使用正确的坐标和尺寸计算
@@ -140,7 +144,7 @@ class DinoPlayer extends SpriteAnimationComponent {
     removeAll(children);
     add(runAnimation);
     position.y = dynamicGroundY; // 底部对齐动态地面
-    size = gameRunSize; // 使用预定义的游戏跑步尺寸
+    size = gameRunSize; // 使用配置系统的游戏跑步尺寸
   }
 
   /// 恐龙跳跃 - 使用优化后的物理参数
@@ -171,7 +175,6 @@ class DinoPlayer extends SpriteAnimationComponent {
       dinoRun = false;
       dinoJump = true;
       jumpVelocity = jumpVel;
-      
     }
   }
   
@@ -207,11 +210,11 @@ class DinoPlayer extends SpriteAnimationComponent {
     position.y = dynamicGroundY; // 底部对齐动态地面
   }
 
-  /// 更新碰撞矩形 - 优化碰撞体验，让边界比图片稍小
+  /// 更新碰撞矩形 - 优化碰撞体验，让边界比图片稍小，使用配置系统的缩放
   void _updateCollisionRect() {
-    // 碰撞矩形收缩参数 - 让碰撞检测更宽松，提升游戏体验
-    const double shrinkX = 8.0; // 左右各收缩8像素
-    const double shrinkY = 6.0; // 上下各收缩6像素
+    // 碰撞矩形收缩参数 - 让碰撞检测更宽松，提升游戏体验，使用配置系统
+    final double shrinkX = DinoGameConfig.collisionShrinkX; // 左右各收缩
+    final double shrinkY = DinoGameConfig.collisionShrinkY; // 上下各收缩
     
     dinoRect = Rect.fromLTWH(
       position.x + shrinkX/2, // X坐标向右偏移收缩量的一半

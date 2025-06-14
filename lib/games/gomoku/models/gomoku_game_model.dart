@@ -49,7 +49,7 @@ class GomokuGameModel extends ChangeNotifier {
   bool _playerGoesFirst = true; // 玩家是否先手
   bool get playerGoesFirst => _playerGoesFirst;
   
-  DifficultyLevel _difficulty = DifficultyLevel.medium; // 默认中等难度
+  DifficultyLevel _difficulty = DifficultyLevel.easy; 
   DifficultyLevel get difficulty => _difficulty;
   
   // 当前轮次 (true: 玩家回合, false: AI回合)

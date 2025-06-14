@@ -10,15 +10,19 @@ import 'components/obstacle.dart';
 import 'components/bird_obstacle.dart';
 import 'components/cloud_background.dart';
 import 'components/ground_track.dart';
+import 'game_config.dart';
 
 /// Chrome Dino Runner - 完全参考Python版本的逻辑和结构，支持自适应界面和移动端触控
 class ChromeDinoGame extends FlameGame 
     with TapDetector, HasKeyboardHandlerComponents, PanDetector {
-  // 游戏常量 - 自适应尺寸替代固定尺寸
-  static const double minScreenWidth = 800.0;     // 最小游戏宽度
-  static const double minScreenHeight = 400.0;    // 最小游戏高度
+  
+  // 游戏常量 - 自适应尺寸替代固定尺寸，使用配置系统的全局缩放
+  static double get minScreenWidth => DinoGameConfig.screenWidth;     // 最小游戏宽度
+  static double get minScreenHeight => DinoGameConfig.screenHeight;    // 最小游戏高度
   static const double aspectRatio = 16 / 9;       // 首选宽高比
-  static const int initialGameSpeed = 4;
+  
+  // 获取缩放后的初始游戏速度
+  static int get initialGameSpeed => DinoGameConfig.gameSpeed;
 
   // 实际游戏尺寸 - 运行时根据屏幕计算
   late double gameWidth;
@@ -37,7 +41,7 @@ class ChromeDinoGame extends FlameGame
   int points = 0;
   int deathCount = 0;
   double xPosBg = 0; // 背景X位置
-  double yPosBg = 380; // 背景Y位置 - 参考Python版本
+  double yPosBg = DinoGameConfig.groundY; // 背景Y位置 - 使用配置系统，应用缩放
   
   // 难度阶段系统 - 平滑的难度递进，参考真实Chrome Dino游戏
   int currentStage = 1; // 当前难度阶段
@@ -124,14 +128,14 @@ class ChromeDinoGame extends FlameGame
 
   /// 设置UI界面 - 参考Python版本的score函数和文本显示，使用自适应布局
   Future<void> _setupUI() async {
-    // 得分显示 - 参考Python版本的score函数
+    // 得分显示 - 参考Python版本的score函数，使用配置系统应用缩放
     scoreText = TextComponent(
       text: 'Points: 0',
-      position: Vector2(gameWidth - 150, 50),
+      position: Vector2(gameWidth - DinoGameConfig.scoreOffsetX, DinoGameConfig.scoreOffsetY),
       anchor: Anchor.topRight,
       textRenderer: TextPaint(
-        style: const TextStyle(
-          fontSize: 20,
+        style: TextStyle(
+          fontSize: DinoGameConfig.fontSizeMedium, // 使用配置系统的缩放
           color: fontColor,
           fontWeight: FontWeight.bold,
         ),
@@ -139,14 +143,14 @@ class ChromeDinoGame extends FlameGame
     );
     add(scoreText);
     
-    // 开始游戏提示 - 参考Python版本的menu函数
+    // 开始游戏提示 - 参考Python版本的menu函数，使用配置系统应用缩放
     startText = TextComponent(
       text: 'Press any Key to Start',
       position: Vector2(gameWidth / 2, gameHeight / 2),
       anchor: Anchor.center,
       textRenderer: TextPaint(
-        style: const TextStyle(
-          fontSize: 30,
+        style: TextStyle(
+          fontSize: DinoGameConfig.fontSizeLarge, // 使用配置系统的缩放
           color: fontColor,
           fontWeight: FontWeight.bold,
         ),
@@ -154,14 +158,14 @@ class ChromeDinoGame extends FlameGame
     );
     add(startText);
     
-    // 暂停文本
+    // 暂停文本，使用配置系统应用缩放
     pauseText = TextComponent(
       text: "Game Paused, Press 'R' to Resume",
       position: Vector2(gameWidth / 2, gameHeight / 3),
       anchor: Anchor.center,
       textRenderer: TextPaint(
-        style: const TextStyle(
-          fontSize: 30,
+        style: TextStyle(
+          fontSize: DinoGameConfig.fontSizeLarge, // 使用配置系统的缩放
           color: fontColor,
           fontWeight: FontWeight.bold,
         ),
@@ -398,14 +402,14 @@ class ChromeDinoGame extends FlameGame
   void _showGameOverMenu() {
     startText.text = 'Press any Key to Restart';
     
-    // 显示最终得分
+    // 显示最终得分，使用配置系统应用缩放
     final scoreDisplay = TextComponent(
       text: 'Your Score: $points',
-      position: Vector2(gameWidth / 2, gameHeight / 2 + 50),
+      position: Vector2(gameWidth / 2, gameHeight / 2 + DinoGameConfig.scoreOffsetY),
       anchor: Anchor.center,
       textRenderer: TextPaint(
-        style: const TextStyle(
-          fontSize: 30,
+        style: TextStyle(
+          fontSize: DinoGameConfig.fontSizeLarge, // 使用配置系统的缩放
           color: fontColor,
           fontWeight: FontWeight.bold,
         ),
@@ -528,8 +532,8 @@ class ChromeDinoGame extends FlameGame
     // 确保UI组件已经初始化
     if (!_uiInitialized) return;
     
-    // 更新分数显示位置
-    scoreText.position = Vector2(gameWidth - 150, 50);
+    // 更新分数显示位置，使用配置系统应用缩放
+    scoreText.position = Vector2(gameWidth - DinoGameConfig.scoreOffsetX, DinoGameConfig.scoreOffsetY);
     
     // 更新开始提示位置
     startText.position = Vector2(gameWidth / 2, gameHeight / 2);

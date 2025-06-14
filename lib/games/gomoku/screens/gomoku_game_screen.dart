@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/gomoku_game_model.dart';
 import '../widgets/gomoku_game_widget.dart';
@@ -667,7 +668,6 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
         // 调用游戏模型的落子方法
         gameModel.makePlayerMove(row, col);
         
-        
       }
     }
   }
@@ -704,7 +704,7 @@ class _GomokuGameScreenState extends State<GomokuGameScreen>
     final cellSize = actualCanvasSize / GomokuGameModel.boardSize;
     final double margin = cellSize * 0.5;
     final double boardDrawSize = actualCanvasSize - margin * 2;
-    final double actualCellSize = boardDrawSize / (GomokuGameModel.boardSize - (availableWidth < availableHeight ? 1 : 0));
+    final double actualCellSize = boardDrawSize / (GomokuGameModel.boardSize - (availableWidth < availableHeight ? 1 : 0));   // 减去一行或一列的偏移量
     
     // 计算到最近交点的距离
     final adjustedX = localPosition.dx - margin;
