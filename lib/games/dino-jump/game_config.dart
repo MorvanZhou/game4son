@@ -45,9 +45,9 @@ class DinoGameConfig {
   static const double BASE_BIRD_2_HEIGHT = 62.0;
   
   // 飞鸟高度偏移
-  static const double BASE_BIRD_HEIGHT_OFFSET_1 = 20.0;
-  static const double BASE_BIRD_HEIGHT_OFFSET_2 = 70.0;
-  static const double BASE_BIRD_HEIGHT_OFFSET_3 = 130.0;
+  static const double BASE_BIRD_HEIGHT_OFFSET_1 = 0.0;
+  static const double BASE_BIRD_HEIGHT_OFFSET_2 = 30.0;
+  static const double BASE_BIRD_HEIGHT_OFFSET_3 = 80.0;
   
   // 碰撞检测偏移
   static const double BASE_COLLISION_SHRINK_X = 8.0;

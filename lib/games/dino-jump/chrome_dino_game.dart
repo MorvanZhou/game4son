@@ -216,52 +216,66 @@ class ChromeDinoGame extends FlameGame
     }
   }
 
-  /// 更新得分 - 参考Python版本的score函数，添加难度阶段管理
+  /// 更新得分 - 参考Python版本的score函数，基于时间的基础得分
   void _updateScore() {
-    // 大幅降低得分增长速度，让难度递进更平滑
-    points += (gameSpeed / 20).round(); 
+    // 基础得分：每帧微量增长（保持游戏进行感）
+    points += 1; // 每帧+1分，约每秒60分
     
-    // 更新难度阶段和游戏速度
+    // 更新难度阶段
     _updateDifficultyStage();
     
     scoreText.text = 'Points: $points';
   }
   
-  /// 更新难度阶段 - 平滑的7阶段难度系统，减缓递进速度
+  /// 更新难度阶段 - 平滑的7阶段难度系统，适配新的混合评分系统
   void _updateDifficultyStage() {
     int newStage = currentStage;
     int newBirdChance = birdAppearanceChance;
     
-    if (points >= 2000) {
-      // 阶段7 (2000分+): 大师级别，最终挑战
+    // 新的分数阈值适配混合评分系统：基础时间分数(~60/秒) + 障碍物奖励分数(10-15/个)
+    // 分数增长更快，调整阈值让难度递进更合理
+    if (points >= 10000) {
+      // 阶段10 (10000分+): 终极挑战 (~120秒游戏时间)
+      newStage = 10;
+    } else if (points >= 8500) {
+      // 阶段9 (8500-10000分): 超级挑战 (~100秒游戏时间)
+      newStage = 9;
+    } else if (points >= 7000){
+      // 阶段9 (7000分+): 终极挑战 (~90秒游戏时间)
+      newStage = 9;
+    } else if (points >= 5000) {
+      // 阶段8 (5000分+): 终极挑战 (~75秒游戏时间)
+      newStage = 8;
+    } else if (points >= 3500) {
+      // 阶段7 (3500分+): 大师级别，最终挑战 (~60秒游戏时间)
       newStage = 7;
-      newBirdChance = 50; // 50%飞鸟概率，不要太高
-    } else if (points >= 1500) {
-      // 阶段6 (1500-2000分): 高级挑战
+      newBirdChance = 50; // 50%飞鸟概率，保持平衡
+    } else if (points >= 2800) {
+      // 阶段6 (2800-3500分): 高级挑战 (~45秒游戏时间)
       newStage = 6;
       newBirdChance = 45; // 45%飞鸟概率  
-    } else if (points >= 1000) {
-      // 阶段5 (1000-1500分): 平衡挑战
+    } else if (points >= 2100) {
+      // 阶段5 (2100-2800分): 平衡挑战 (~35秒游戏时间)
       newStage = 5;
       newBirdChance = 40; // 40%飞鸟概率
-    } else if (points >= 700) {
-      // 阶段4 (700-1000分): 能力巩固
+    } else if (points >= 1500) {
+      // 阶段4 (1500-2100分): 能力巩固 (~25秒游戏时间)
       newStage = 4;
       newBirdChance = 35; // 35%飞鸟概率
-    } else if (points >= 500) {
-      // 阶段3 (500-700分): 技能建立
+    } else if (points >= 1000) {
+      // 阶段3 (1000-1500分): 技能建立 (~16秒游戏时间)
       newStage = 3;
       newBirdChance = 30; // 30%飞鸟概率
-    } else if (points >= 300) {
-      // 阶段2 (300-500分): 初步学习
+    } else if (points >= 600) {
+      // 阶段2 (600-1000分): 初步学习 (~10秒游戏时间)
       newStage = 2;
       newBirdChance = 20; // 20%飞鸟概率，温和开始
-    } else if (points >= 150) {
-      // 阶段1 (150-300分): 认知阶段，飞鸟开始出现
+    } else if (points >= 300) {
+      // 阶段1 (300-600分): 认知阶段，飞鸟开始出现 (~5秒游戏时间)
       newStage = 1;
       newBirdChance = 10; // 10%飞鸟概率，非常温和
     } else {
-      // 阶段0 (0-150分): 学习阶段，只有仙人掌
+      // 阶段0 (0-300分): 学习阶段，只有仙人掌 (~前5秒)
       newStage = 0;
       newBirdChance = 0; // 无飞鸟
     }
@@ -269,7 +283,9 @@ class ChromeDinoGame extends FlameGame
     // 更新状态
     currentStage = newStage;
     birdAppearanceChance = newBirdChance;
-    gameSpeed = gameSpeed * (1 + newStage * 0.05).round(); // 每个阶段增加5%的速度
+    
+    // 修复游戏速度计算 - 基于初始速度递增，而非累乘
+    gameSpeed = (initialGameSpeed * (1 + newStage * 0.2)).round(); // 每个阶段增加5%的速度
   }
 
   /// 生成障碍物 - 基于难度阶段的智能障碍物系统
@@ -337,11 +353,43 @@ class ChromeDinoGame extends FlameGame
       
       // 检查是否超出屏幕
       if (obstacle.isOffScreen()) {
+        // 成功躲避障碍物，给予额外得分奖励
+        _awardObstacleAvoidancePoints(obstacle);
         obstacle.removeFromParent();
         return true;
       }
       return false;
     });
+  }
+
+  /// 奖励成功躲避障碍物的得分 - 参考Chrome Dino经典规则
+  void _awardObstacleAvoidancePoints(Obstacle obstacle) {
+    // 根据障碍物类型给予不同的得分奖励
+    int bonusPoints = 0;
+    
+    // 根据障碍物类型判断奖励分数
+    if (obstacle is BirdObstacle) {
+      bonusPoints = 15; // 飞鸟更难躲避，给予更高分数
+    } else if (obstacle.type >= 0 && obstacle.type <= 2) { 
+      // 小仙人掌 (SmallCactus types 0-2)
+      bonusPoints = 10;
+    } else {
+      // 大仙人掌 (LargeCactus types 0-2)  
+      bonusPoints = 12;
+    }
+    
+    // 根据当前难度阶段增加得分倍数
+    double difficultyMultiplier = 1.0 + (currentStage * 0.1); // 每个阶段增加10%
+    bonusPoints = (bonusPoints * difficultyMultiplier).round();
+    
+    // 添加到总分
+    points += bonusPoints;
+    
+    // 更新得分显示
+    scoreText.text = 'Points: $points';
+    
+    // 可选：显示得分提示（在实际实现中可以添加动画效果）
+    // print('成功躲避！+$bonusPoints 分');
   }
 
   /// 检查碰撞 - 参考Python版本的player.dino_rect.colliderect(obstacle.rect)
