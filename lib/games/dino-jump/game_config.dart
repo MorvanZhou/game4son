@@ -6,8 +6,8 @@ class DinoGameConfig {
   static const double GLOBAL_SCALE_FACTOR = 0.5;
   
   // 游戏基础常量（未缩放的原始值）
-  static const double BASE_SCREEN_WIDTH = 800.0;
-  static const double BASE_SCREEN_HEIGHT = 400.0;
+  static const double BASE_SCREEN_WIDTH = 600.0;
+  static const double BASE_SCREEN_HEIGHT = 300.0;
   static const double BASE_GAME_SPEED = 12.0;
   static const double BASE_GROUND_Y = 380.0;
   
@@ -21,7 +21,7 @@ class DinoGameConfig {
   // UI基础常量
   static const double BASE_FONT_SIZE_LARGE = 30.0;
   static const double BASE_FONT_SIZE_MEDIUM = 20.0;
-  static const double BASE_SCORE_OFFSET_X = 150.0;
+  static const double BASE_SCORE_OFFSET_X = 50.0;
   static const double BASE_SCORE_OFFSET_Y = 50.0;
   
   // 障碍物基础尺寸

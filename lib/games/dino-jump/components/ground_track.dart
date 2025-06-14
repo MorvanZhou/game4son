@@ -48,8 +48,22 @@ class GroundTrack extends Component {
     track2.size = Vector2(trackWidth, trackHeight);
   }
 
+  /// 检查组件是否已经完全初始化
+  bool _isComponentInitialized() {
+    try {
+      // 尝试访问late字段，如果它们还没有初始化会抛出异常
+      return track1.isMounted && track2.isMounted;
+    } catch (e) {
+      // 如果访问late字段时抛出LateInitializationError，则说明还没有初始化
+      return false;
+    }
+  }
+
   /// 更新地面轨道移动 - 参考Python版本的background函数，使用配置系统应用缩放
   void updateMovement(int gameSpeed) {
+    // 确保组件已经初始化
+    if (!_isComponentInitialized()) return;
+    
     // 参考Python版本的移动逻辑: x_pos_bg -= game_speed，使用配置系统应用缩放
     xPosBg -= gameSpeed * DinoGameConfig.GLOBAL_SCALE_FACTOR;
     
@@ -68,6 +82,9 @@ class GroundTrack extends Component {
 
   /// 重置地面轨道 - 游戏重新开始时调用
   void reset() {
+    // 确保组件已经初始化
+    if (!_isComponentInitialized()) return;
+    
     xPosBg = 0.0;
     track1.position.x = xPosBg;
     track2.position.x = track1.size.x + xPosBg;
@@ -77,6 +94,9 @@ class GroundTrack extends Component {
   void updateGameSize(double newGameWidth, double newGameHeight) {
     gameWidth = newGameWidth;
     yPosBg = DinoGameConfig.groundY + 20; // 使用配置系统的地面位置
+    
+    // 确保组件已经初始化再更新尺寸
+    if (!_isComponentInitialized()) return;
     
     // 更新轨道位置和大小
     track1.position.y = yPosBg;
