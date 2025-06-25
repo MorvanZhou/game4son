@@ -5,41 +5,41 @@ on:
     types: [published]
 
 jobs:
-  macos:
-    runs-on: macos-latest  # 必须使用 macOS 环境
-    steps:
-      - uses: actions/checkout@v4  # 拉取代码
+  # macos:
+  #   runs-on: macos-latest  # 必须使用 macOS 环境
+  #   steps:
+  #     - uses: actions/checkout@v4  # 拉取代码
       
-      - uses: subosito/flutter-action@v2.14.0
-        with:
-          # The Flutter version to make available on the path
-          flutter-version: any # optional, default is any
-          # The Flutter build release channel
-          channel: stable # optional, default is stable
-          # Cache the Flutter SDK
-          cache: false # optional, default is false
-          # Identifier for the Flutter SDK cache
-          # cache-key: # optional, default is flutter-:os:-:channel:-:version:-:arch:-:hash:
-          # Identifier for the Dart .pub-cache cache
-          # pub-cache-key: # optional, default is flutter-pub:os:-:channel:-:version:-:arch:-:hash:
-          # Flutter SDK cache path
-          # cache-path: # optional, default is ${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:
-          # Flutter pub cache path
-          # pub-cache-path: # optional, default is default
-          # The architecture of Flutter SDK executable (x64 or arm64)
-          # architecture: # optional, default is ${{ runner.arch }}
+  #     - uses: subosito/flutter-action@v2.14.0
+  #       with:
+  #         # The Flutter version to make available on the path
+  #         flutter-version: any # optional, default is any
+  #         # The Flutter build release channel
+  #         channel: stable # optional, default is stable
+  #         # Cache the Flutter SDK
+  #         cache: false # optional, default is false
+  #         # Identifier for the Flutter SDK cache
+  #         # cache-key: # optional, default is flutter-:os:-:channel:-:version:-:arch:-:hash:
+  #         # Identifier for the Dart .pub-cache cache
+  #         # pub-cache-key: # optional, default is flutter-pub:os:-:channel:-:version:-:arch:-:hash:
+  #         # Flutter SDK cache path
+  #         # cache-path: # optional, default is ${{ runner.tool_cache }}/flutter/:channel:-:version:-:arch:
+  #         # Flutter pub cache path
+  #         # pub-cache-path: # optional, default is default
+  #         # The architecture of Flutter SDK executable (x64 or arm64)
+  #         # architecture: # optional, default is ${{ runner.arch }}
                 
-      - run: flutter pub get
-      - run: flutter build macos --release
-      - run: tar -czvf game4son_macos.tar.gz -C build/macos/Build/Products/Release game4son.app  # 打包为 .tar.gz
-      - run: ls -lh game4son_macos.tar.gz
-      - uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
-        with:
-          files: game4son_macos.tar.gz
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
-          name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
-          draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
-          prerelease: false
+  #     - run: flutter pub get
+  #     - run: flutter build macos --release
+  #     - run: tar -czvf game4son_macos.tar.gz -C build/macos/Build/Products/Release game4son.app  # 打包为 .tar.gz
+  #     - run: ls -lh game4son_macos.tar.gz
+  #     - uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
+  #       with:
+  #         files: game4son_macos.tar.gz
+  #         tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+  #         name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.sha }}
+  #         draft: ${{ startsWith(github.ref, 'refs/tags/') == false }}
+  #         prerelease: false
 
   # web: # 构建 Web 版本
   #   runs-on: ubuntu-latest  # 使用最新的 Ubuntu 系统执行
